@@ -1,7 +1,9 @@
 # DONE_WITH_CONCERNS
 
-Task 8 complete with simplifications:
+Task 9 complete.
 
-- `comp` uses all-time `SumDistByUser` vs `plan_weeks[week_index=0].TargetKm()` (first number in `plan_label`); no calendar week window / date-based current week yet.
-- Repo lives at `adapter/postgres/plan_week_repo` (project convention), not `internal/repository/`.
-- Plan clamp uses min/max `week_index` from `FindByClub`; empty plan weeks → empty range/plan strings, workouts still returned.
+- `User.needsClub` + `api.createClub` → `POST /clubs`; store `createClub` action refreshes after create.
+- Removed `demoRole` / `setDemoRole`; role from `user.role`.
+- Minimal consumer updates (App + screens) so typecheck passes; full Auth UI gates remain Task 10.
+- Role switcher UI removed from App (was tied to `setDemoRole`); Task 11 still owns BottomNav hybrid.
+

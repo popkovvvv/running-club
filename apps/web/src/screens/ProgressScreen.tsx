@@ -3,16 +3,17 @@ import { api } from '../lib/api'
 import { useApp } from '../lib/store'
 
 export function ProgressScreen() {
-  const { theme, demoRole } = useApp()
+  const { theme, user } = useApp()
   const [progress, setProgress] = useState<Awaited<ReturnType<typeof api.progress>> | null>(null)
   const [analytics, setAnalytics] = useState<Awaited<ReturnType<typeof api.analytics>> | null>(null)
+  const isCoach = user?.role === 'coach'
 
   useEffect(() => {
-    if (demoRole === 'coach') void api.analytics().then(setAnalytics).catch(() => null)
+    if (isCoach) void api.analytics().then(setAnalytics).catch(() => null)
     else void api.progress().then(setProgress).catch(() => null)
-  }, [demoRole])
+  }, [isCoach])
 
-  if (demoRole === 'coach') {
+  if (isCoach) {
     return (
       <div className="fade" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ display: 'flex', gap: 10 }}>

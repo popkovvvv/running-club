@@ -12,9 +12,9 @@ import { RacesScreen } from './screens/RacesScreen'
 import { ScheduleScreen } from './screens/ScheduleScreen'
 
 export default function App() {
-  const { user, loading, theme, screen, setScreen, demoRole, setDemoRole } = useApp()
+  const { user, loading, theme, screen, setScreen } = useApp()
   const [activities, setActivities] = useState<Activity[]>([])
-  const isCoach = demoRole === 'coach'
+  const isCoach = user?.role === 'coach'
 
   useEffect(() => {
     if (user && !isCoach) void api.activities().then(setActivities).catch(() => setActivities([]))
@@ -42,10 +42,6 @@ export default function App() {
                 <div style={{ fontFamily: theme.display, fontSize: 22, fontWeight: 800 }}>{isCoach ? 'Кабинет тренера' : 'Личный кабинет'}</div>
               </div>
               <div style={{ width: 42, height: 42, borderRadius: '50%', background: theme.card2, border: `1.5px solid ${theme.accent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.accent, fontWeight: 800 }}>{isCoach ? 'ТР' : 'НП'}</div>
-            </div>
-            <div style={{ display: 'flex', background: theme.card, border: `1px solid ${theme.line}`, borderRadius: 14, padding: 4, gap: 4 }}>
-              <button className="btn" data-testid="role-athlete" onClick={() => void setDemoRole('athlete')} style={{ flex: 1, padding: '9px 0', borderRadius: 10, background: !isCoach ? theme.accent : 'transparent', color: !isCoach ? theme.onAccent : theme.dim }}>Спортсмен</button>
-              <button className="btn" data-testid="role-coach" onClick={() => void setDemoRole('coach')} style={{ flex: 1, padding: '9px 0', borderRadius: 10, background: isCoach ? theme.accent : 'transparent', color: isCoach ? theme.onAccent : theme.dim }}>Тренер</button>
             </div>
           </div>
           <div className="scrl" style={{ flex: 1, overflowY: 'auto', padding: '2px 16px 96px' }}>

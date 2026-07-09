@@ -3,7 +3,7 @@ import { api } from '../lib/api'
 import { useApp } from '../lib/store'
 
 export function PlanScreen() {
-  const { theme, demoRole } = useApp()
+  const { theme, user } = useApp()
   const [plan, setPlan] = useState<Awaited<ReturnType<typeof api.plan>> | null>(null)
   const [week, setWeek] = useState(1)
   const [open, setOpen] = useState(false)
@@ -21,7 +21,7 @@ export function PlanScreen() {
 
   return (
     <div className="fade" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {demoRole === 'athlete' ? (
+      {user?.role === 'athlete' ? (
         <>
           <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: 16 }}>
             <button className="btn" onClick={() => setWeek((w) => Math.max(0, w - 1))} style={{ width: 38, height: 38, background: theme.card2, color: theme.text, borderRadius: 11 }}>‹</button>

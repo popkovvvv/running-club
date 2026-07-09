@@ -3,7 +3,7 @@ import { api } from '../lib/api'
 import { useApp } from '../lib/store'
 
 export function RacesScreen() {
-  const { theme, demoRole } = useApp()
+  const { theme, user } = useApp()
   const [prs, setPrs] = useState<Array<{ d: string; t: string; date: string }>>([])
   const [races, setRaces] = useState<Array<{ days: string; name: string; date: string; dist: string; goal: string }>>([])
 
@@ -24,7 +24,7 @@ export function RacesScreen() {
           </div>
         ))}
       </div>
-      <div style={{ fontFamily: theme.display, fontWeight: 800, textTransform: 'uppercase' }}>{demoRole === 'coach' ? 'Старты клуба' : 'Календарь стартов'}</div>
+      <div style={{ fontFamily: theme.display, fontWeight: 800, textTransform: 'uppercase' }}>{user?.role === 'coach' ? 'Старты клуба' : 'Календарь стартов'}</div>
       {races.map((r) => (
         <div key={r.name} className="card" style={{ display: 'flex', gap: 14, alignItems: 'center', borderRadius: 16 }}>
           <div style={{ width: 52, textAlign: 'center', background: theme.card2, borderRadius: 12, padding: 8 }}>

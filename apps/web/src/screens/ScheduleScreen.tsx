@@ -3,7 +3,7 @@ import { api } from '../lib/api'
 import { useApp } from '../lib/store'
 
 export function ScheduleScreen() {
-  const { theme, announces, signupAnnounce, unsignupAnnounce, demoRole, publishAnnounce } = useApp()
+  const { theme, announces, signupAnnounce, unsignupAnnounce, user, publishAnnounce } = useApp()
   const [cells, setCells] = useState<Array<{ key: string; n: number; blank: boolean; bg: string; fg: string; dot: string }>>([])
   const [showForm, setShowForm] = useState(false)
 
@@ -30,7 +30,7 @@ export function ScheduleScreen() {
         </div>
       </div>
 
-      {demoRole === 'coach' && (
+      {user?.role === 'coach' && (
         <button className="btn" onClick={() => setShowForm((v) => !v)} style={{ border: `1px solid ${theme.accent}`, background: theme.accentSoft, color: theme.accent, borderRadius: 14, padding: 13 }}>
           ＋ Опубликовать анонс
         </button>
@@ -53,7 +53,7 @@ export function ScheduleScreen() {
           <div style={{ fontSize: 10, fontWeight: 800, color: theme.accent }}>ГРУППОВАЯ · {an.group}</div>
           <div style={{ fontFamily: theme.display, fontSize: 19, fontWeight: 800, margin: '6px 0' }}>{an.place}</div>
           <div style={{ fontSize: 13, color: theme.dim, marginBottom: 14 }}>{an.day} · {an.time} · идут {an.going}</div>
-          {demoRole === 'athlete' && (
+          {user?.role === 'athlete' && (
             <button
               data-testid="schedule-cta"
               className="btn"

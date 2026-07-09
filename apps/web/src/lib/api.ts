@@ -6,6 +6,7 @@ export type User = {
   email: string
   role: 'athlete' | 'coach'
   inClub: boolean
+  needsClub?: boolean
   clubId?: string
 }
 
@@ -86,6 +87,8 @@ export const api = {
   me: () => request<User>('/auth/me'),
   logout: () => request<{ status: string }>('/auth/logout', { method: 'POST' }),
   club: () => request<Club>('/club'),
+  createClub: (body: { name: string; accentHex: string }) =>
+    request<Club>('/clubs', { method: 'POST', body: JSON.stringify(body) }),
   joinClub: (code: string) => request<Club>('/club/join', { method: 'POST', body: JSON.stringify({ code }) }),
   leaveClub: () => request<{ status: string }>('/club/leave', { method: 'POST' }),
   palette: (accentHex: string) =>

@@ -10,15 +10,14 @@ type AppState = {
   theme: Theme
   club: Club | null
   screen: Screen
-  demoRole: 'athlete' | 'coach'
   announces: Announce[]
   loading: boolean
   setScreen: (s: Screen) => void
-  setDemoRole: (r: 'athlete' | 'coach') => Promise<void> | void
   login: (email: string, password: string) => Promise<void>
   register: (name: string, email: string, password: string, role: string) => Promise<void>
   logout: () => void
   refresh: () => Promise<void>
+  createClub: (body: { name: string; accentHex: string }) => Promise<void>
   joinClub: (code: string) => Promise<void>
   leaveClub: () => Promise<void>
   setPalette: (hex: string) => Promise<void>
@@ -35,7 +34,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
   const [club, setClub] = useState<Club | null>(null)
   const [screen, setScreen] = useState<Screen>('home')
-  const [demoRole, setDemoRole] = useState<'athlete' | 'coach'>('athlete')
   const [announces, setAnnounces] = useState<Announce[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -52,8 +50,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       const me = await api.me()
       setUser(me)
-      setDemoRole(me.role)
-      if (me.inClub || me.role === 'coach') {
+      if (me.needsClub) {
+        setClub(null)
+        setAnnounces([])
+      } else if (me.inClub || me.role === 'coach') {
         const c = await api.club()
         setClub(c)
         const a = await api.announces()
@@ -79,7 +79,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('token', res.token)
     setToken(res.token)
     setUser(res.user)
-    setDemoRole(res.user.role)
     setScreen('home')
     await refresh()
   }
@@ -90,27 +89,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     theme,
     club,
     screen,
-    demoRole,
     announces,
     loading,
     setScreen,
-    setDemoRole: async (r) => {
-      if (r === demoRole && user?.role === r) return
-      const creds = r === 'coach'
-        ? { email: 'coach@pulse.run', password: 'password' }
-        : { email: 'nikita@pulse.run', password: 'password' }
-      try {
-        const res = await api.login(creds)
-        localStorage.setItem('token', res.token)
-        setToken(res.token)
-        setUser(res.user)
-        setDemoRole(r)
-        setScreen('home')
-        await refresh()
-      } catch {
-        setDemoRole(r)
-      }
-    },
     login: async (email, password) => {
       const res = await api.login({ email, password })
       await applyAuth(res)
@@ -127,6 +108,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setAnnounces([])
     },
     refresh,
+    createClub: async (body) => {
+      const c = await api.createClub(body)
+      setClub(c)
+      setUser((u) => (u ? { ...u, needsClub: false, inClub: true, clubId: c.id } : u))
+      await refresh()
+    },
     joinClub: async (code) => {
       const c = await api.joinClub(code)
       setClub(c)
