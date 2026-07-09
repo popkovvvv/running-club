@@ -51,7 +51,7 @@ func TestCreate(t *testing.T) {
 			if tt.before != nil {
 				tt.before(m)
 			}
-			uc := workout_usecase.NewUseCase(m.workoutRepo)
+			uc := workout_usecase.NewUseCase(m.workoutRepo, m.planWeekRepo, m.membershipRepo)
 			view, err := uc.Create(context.Background(), uid, tt.req)
 			require.NoError(t, err)
 			require.InDelta(t, tt.want, view.DistKm, 0.01)
@@ -62,6 +62,6 @@ func TestCreate(t *testing.T) {
 func TestSegmentTotal(t *testing.T) {
 	t.Parallel()
 	m := newMocks(t)
-	uc := workout_usecase.NewUseCase(m.workoutRepo)
+	uc := workout_usecase.NewUseCase(m.workoutRepo, m.planWeekRepo, m.membershipRepo)
 	require.Equal(t, 8.0, uc.SegmentTotal([]dto.SegmentInput{{DistKm: 2}, {DistKm: 5}, {DistKm: 1}}))
 }

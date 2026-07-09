@@ -47,7 +47,7 @@ func TestLeave(t *testing.T) {
 			if tt.before != nil {
 				tt.before(m)
 			}
-			uc := club_usecase.NewUseCase(m.clubRepo, m.membershipRepo, m.userRepo, m.activityRepo, m.announceRepo)
+			uc := club_usecase.NewUseCase(m.clubRepo, m.membershipRepo, m.userRepo, m.activityRepo, m.announceRepo, m.planWeekRepo)
 			err := uc.Leave(context.Background(), athleteID)
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

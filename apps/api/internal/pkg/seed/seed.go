@@ -50,6 +50,20 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 		return fmt.Errorf("insert membership: %w", err)
 	}
 
+	planWeeks := []*model.PlanWeek{
+		model.NewPlanWeek(clubID, 0, "13.07 – 19.07", "25 км"),
+		model.NewPlanWeek(clubID, 1, "20.07 – 26.07", "27–28 км"),
+		model.NewPlanWeek(clubID, 2, "27.07 – 02.08", "30 км"),
+		model.NewPlanWeek(clubID, 3, "03.08 – 09.08", "33 км"),
+	}
+	for _, pw := range planWeeks {
+		_, err = pool.Exec(ctx, `INSERT INTO plan_weeks (id,club_id,week_index,range_label,plan_label) VALUES ($1,$2,$3,$4,$5)`,
+			pw.ID, pw.ClubID, pw.WeekIndex, pw.RangeLabel, pw.PlanLabel)
+		if err != nil {
+			return fmt.Errorf("insert plan_week: %w", err)
+		}
+	}
+
 	july21 := time.Date(2026, 7, 21, 0, 0, 0, 0, time.UTC)
 	july23 := time.Date(2026, 7, 23, 0, 0, 0, 0, time.UTC)
 	announces := []*model.Announce{

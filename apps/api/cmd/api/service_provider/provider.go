@@ -10,6 +10,7 @@ import (
 	"github.com/nikpopkov/running-club/api/internal/adapter/postgres/announce_repo"
 	"github.com/nikpopkov/running-club/api/internal/adapter/postgres/club_repo"
 	"github.com/nikpopkov/running-club/api/internal/adapter/postgres/membership_repo"
+	"github.com/nikpopkov/running-club/api/internal/adapter/postgres/plan_week_repo"
 	"github.com/nikpopkov/running-club/api/internal/adapter/postgres/user_repo"
 	"github.com/nikpopkov/running-club/api/internal/adapter/postgres/workout_repo"
 	"github.com/nikpopkov/running-club/api/internal/app/http/activity"
@@ -69,13 +70,14 @@ func (s *ServiceProvider) Handler() http.Handler {
 	announceRepo := announce_repo.NewRepo(s.pool)
 	workoutRepo := workout_repo.NewRepo(s.pool)
 	activityRepo := activity_repo.NewRepo(s.pool)
+	planWeekRepo := plan_week_repo.NewRepo(s.pool)
 
 	authUC := auth_usecase.NewUseCase(userRepo, membershipRepo, clubRepo, s.jwt)
-	clubUC := club_usecase.NewUseCase(clubRepo, membershipRepo, userRepo, activityRepo, announceRepo)
+	clubUC := club_usecase.NewUseCase(clubRepo, membershipRepo, userRepo, activityRepo, announceRepo, planWeekRepo)
 	scheduleUC := schedule_usecase.NewUseCase(announceRepo, clubRepo, membershipRepo)
-	workoutUC := workout_usecase.NewUseCase(workoutRepo)
+	workoutUC := workout_usecase.NewUseCase(workoutRepo, planWeekRepo, membershipRepo)
 	activityUC := activity_usecase.NewUseCase(activityRepo)
-	analyticsUC := analytics_usecase.NewUseCase(clubRepo, userRepo, activityRepo, announceRepo)
+	analyticsUC := analytics_usecase.NewUseCase(clubRepo, userRepo, activityRepo, announceRepo, planWeekRepo)
 
 	return router.New(router.Handlers{
 		Auth:      auth.NewHandler(authUC),

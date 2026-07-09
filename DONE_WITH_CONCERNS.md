@@ -1,7 +1,7 @@
 # DONE_WITH_CONCERNS
 
-Task 6 complete with simplifications:
+Task 8 complete with simplifications:
 
-- `comp` always `0` — `plan_week_repo` not wired yet (Task 8); no plan_km / week window.
-- Athlete `km` is all-time `SUM(activities.dist_km)` (v1 OK per task notes).
-- Analytics student `sub` remains `"Прогресс недели"` (analytics formulas cover clubKm/attendance/per-student km).
+- `comp` uses all-time `SumDistByUser` vs `plan_weeks[week_index=0].TargetKm()` (first number in `plan_label`); no calendar week window / date-based current week yet.
+- Repo lives at `adapter/postgres/plan_week_repo` (project convention), not `internal/repository/`.
+- Plan clamp uses min/max `week_index` from `FindByClub`; empty plan weeks → empty range/plan strings, workouts still returned.

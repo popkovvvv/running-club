@@ -13,6 +13,7 @@ type (
 		userRepo     userRepo
 		activityRepo activityRepo
 		announceRepo announceRepo
+		planWeekRepo planWeekRepo
 	}
 
 	clubRepo interface {
@@ -31,6 +32,10 @@ type (
 	announceRepo interface {
 		AttendanceStats(ctx context.Context, clubID uuid.UUID) (signedUp int, capacity int, err error)
 	}
+
+	planWeekRepo interface {
+		GetByClubAndIndex(ctx context.Context, clubID uuid.UUID, weekIndex int) (*model.PlanWeek, error)
+	}
 )
 
 func NewUseCase(
@@ -38,11 +43,13 @@ func NewUseCase(
 	userRepo userRepo,
 	activityRepo activityRepo,
 	announceRepo announceRepo,
+	planWeekRepo planWeekRepo,
 ) *UseCase {
 	return &UseCase{
 		clubRepo:     clubRepo,
 		userRepo:     userRepo,
 		activityRepo: activityRepo,
 		announceRepo: announceRepo,
+		planWeekRepo: planWeekRepo,
 	}
 }

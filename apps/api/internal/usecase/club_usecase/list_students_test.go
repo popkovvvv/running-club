@@ -20,34 +20,37 @@ func TestListStudents(t *testing.T) {
 	athleteID := uuid.New()
 	club := model.ClubFixture(clubID, "PULSE", "PULSE-7K42", "#ff5c22", coachID)
 	athlete := model.UserFixture(athleteID, "Иван Петров", "ivan@pulse.run", "hash", model.RoleAthlete)
+	planWeek := model.NewPlanWeek(clubID, 0, "13.07 – 19.07", "25 км")
 
 	tests := []struct {
-		name    string
-		before  func(m usecaseMocks)
-		wantLen int
-		wantKm  string
-		wantSub string
+		name     string
+		before   func(m usecaseMocks)
+		wantLen  int
+		wantKm   string
+		wantSub  string
 		wantComp int
-		wantErr error
+		wantErr  error
 	}{
 		{
 			name: "ok",
 			before: func(m usecaseMocks) {
 				m.clubRepo.EXPECT().GetByCoachID(mock.Anything, coachID).Return(club, nil).Once()
 				m.userRepo.EXPECT().FindAthletesByClub(mock.Anything, clubID).Return([]*model.User{athlete}, nil).Once()
+				m.planWeekRepo.EXPECT().GetByClubAndIndex(mock.Anything, clubID, 0).Return(planWeek, nil).Once()
 				m.activityRepo.EXPECT().SumDistByUser(mock.Anything, athleteID).Return(24.6, nil).Once()
 				m.announceRepo.EXPECT().NextLabelForAthlete(mock.Anything, clubID, athleteID).Return("Вт, 21 июля · Стадион «Зина»", nil).Once()
 			},
 			wantLen:  1,
 			wantKm:   "24.6",
 			wantSub:  "Вт, 21 июля · Стадион «Зина»",
-			wantComp: 0,
+			wantComp: 98,
 		},
 		{
 			name: "no_upcoming_announce",
 			before: func(m usecaseMocks) {
 				m.clubRepo.EXPECT().GetByCoachID(mock.Anything, coachID).Return(club, nil).Once()
 				m.userRepo.EXPECT().FindAthletesByClub(mock.Anything, clubID).Return([]*model.User{athlete}, nil).Once()
+				m.planWeekRepo.EXPECT().GetByClubAndIndex(mock.Anything, clubID, 0).Return(nil, model.ErrNotFound).Once()
 				m.activityRepo.EXPECT().SumDistByUser(mock.Anything, athleteID).Return(0, nil).Once()
 				m.announceRepo.EXPECT().NextLabelForAthlete(mock.Anything, clubID, athleteID).Return("", model.ErrNotFound).Once()
 			},
@@ -71,7 +74,7 @@ func TestListStudents(t *testing.T) {
 			if tt.before != nil {
 				tt.before(m)
 			}
-			uc := club_usecase.NewUseCase(m.clubRepo, m.membershipRepo, m.userRepo, m.activityRepo, m.announceRepo)
+			uc := club_usecase.NewUseCase(m.clubRepo, m.membershipRepo, m.userRepo, m.activityRepo, m.announceRepo, m.planWeekRepo)
 			students, err := uc.ListStudents(context.Background(), coachID)
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

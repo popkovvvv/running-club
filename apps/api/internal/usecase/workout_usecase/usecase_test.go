@@ -9,12 +9,16 @@ import (
 )
 
 type usecaseMocks struct {
-	workoutRepo *mocks.WorkoutRepo
+	workoutRepo    *mocks.WorkoutRepo
+	planWeekRepo   *mocks.PlanWeekRepo
+	membershipRepo *mocks.MembershipRepo
 }
 
 func newMocks(t *testing.T) usecaseMocks {
 	t.Helper()
 	return usecaseMocks{
-		workoutRepo: mocks.NewWorkoutRepo(t),
+		workoutRepo:    mocks.NewWorkoutRepo(t),
+		planWeekRepo:   mocks.NewPlanWeekRepo(t),
+		membershipRepo: mocks.NewMembershipRepo(t),
 	}
 }

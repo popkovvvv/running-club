@@ -9,7 +9,9 @@ import (
 
 type (
 	UseCase struct {
-		workoutRepo workoutRepo
+		workoutRepo    workoutRepo
+		planWeekRepo   planWeekRepo
+		membershipRepo membershipRepo
 	}
 
 	workoutRepo interface {
@@ -18,15 +20,20 @@ type (
 		FindOwnByUser(ctx context.Context, userID uuid.UUID) ([]*model.Workout, error)
 		Delete(ctx context.Context, id uuid.UUID) error
 	}
+
+	planWeekRepo interface {
+		FindByClub(ctx context.Context, clubID uuid.UUID) ([]*model.PlanWeek, error)
+	}
+
+	membershipRepo interface {
+		GetActiveByUser(ctx context.Context, userID uuid.UUID) (*model.Membership, error)
+	}
 )
 
-func NewUseCase(workoutRepo workoutRepo) *UseCase {
-	return &UseCase{workoutRepo: workoutRepo}
-}
-
-var weekMeta = []struct{ Range, Plan string }{
-	{"13.07 – 19.07", "25 км"},
-	{"20.07 – 26.07", "27–28 км"},
-	{"27.07 – 02.08", "30 км"},
-	{"03.08 – 09.08", "33 км"},
+func NewUseCase(workoutRepo workoutRepo, planWeekRepo planWeekRepo, membershipRepo membershipRepo) *UseCase {
+	return &UseCase{
+		workoutRepo:    workoutRepo,
+		planWeekRepo:   planWeekRepo,
+		membershipRepo: membershipRepo,
+	}
 }

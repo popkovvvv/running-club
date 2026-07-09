@@ -2,6 +2,7 @@ package analytics_usecase
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nikpopkov/running-club/api/internal/domain/dto"
+	"github.com/nikpopkov/running-club/api/internal/domain/model"
 )
 
 func (u *UseCase) ClubAnalytics(ctx context.Context, coachID uuid.UUID) (*dto.AnalyticsResponse, error) {
@@ -30,11 +32,24 @@ func (u *UseCase) ClubAnalytics(ctx context.Context, coachID uuid.UUID) (*dto.An
 		return nil, fmt.Errorf("announceRepo.AttendanceStats: %w", err)
 	}
 	attendance := attendancePct(signedUp, capacity)
+	planKm, hasPlan := 0.0, false
+	pw, err := u.planWeekRepo.GetByClubAndIndex(ctx, club.ID, 0)
+	if err != nil {
+		if !errors.Is(err, model.ErrNotFound) {
+			return nil, fmt.Errorf("planWeekRepo.GetByClubAndIndex: %w", err)
+		}
+	} else {
+		planKm, hasPlan = pw.TargetKm()
+	}
 	students := make([]dto.StudentView, 0, len(users))
 	for _, usr := range users {
 		km, err := u.activityRepo.SumDistByUser(ctx, usr.ID)
 		if err != nil {
 			return nil, fmt.Errorf("activityRepo.SumDistByUser: %w", err)
+		}
+		comp := 0
+		if hasPlan {
+			comp = int(math.Min(100, math.Round(100*km/planKm)))
 		}
 		students = append(students, dto.NewStudentView(
 			usr.ID,
@@ -42,7 +57,7 @@ func (u *UseCase) ClubAnalytics(ctx context.Context, coachID uuid.UUID) (*dto.An
 			usr.Name,
 			"Прогресс недели",
 			strconv.FormatFloat(km, 'f', 1, 64),
-			0,
+			comp,
 		))
 	}
 	return dto.NewAnalyticsResponse(clubKm, attendance, students), nil

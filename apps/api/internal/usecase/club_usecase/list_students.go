@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 
 	"github.com/google/uuid"
@@ -20,6 +21,15 @@ func (u *UseCase) ListStudents(ctx context.Context, coachID uuid.UUID) ([]dto.St
 	if err != nil {
 		return nil, fmt.Errorf("userRepo.FindAthletesByClub: %w", err)
 	}
+	planKm, hasPlan := 0.0, false
+	pw, err := u.planWeekRepo.GetByClubAndIndex(ctx, club.ID, 0)
+	if err != nil {
+		if !errors.Is(err, model.ErrNotFound) {
+			return nil, fmt.Errorf("planWeekRepo.GetByClubAndIndex: %w", err)
+		}
+	} else {
+		planKm, hasPlan = pw.TargetKm()
+	}
 	out := make([]dto.StudentView, 0, len(users))
 	for _, usr := range users {
 		km, err := u.activityRepo.SumDistByUser(ctx, usr.ID)
@@ -33,13 +43,17 @@ func (u *UseCase) ListStudents(ctx context.Context, coachID uuid.UUID) ([]dto.St
 			}
 			sub = "Нет записи"
 		}
+		comp := 0
+		if hasPlan {
+			comp = int(math.Min(100, math.Round(100*km/planKm)))
+		}
 		out = append(out, dto.NewStudentView(
 			usr.ID,
 			initials(usr.Name),
 			usr.Name,
 			sub,
 			strconv.FormatFloat(km, 'f', 1, 64),
-			0,
+			comp,
 		))
 	}
 	return out, nil

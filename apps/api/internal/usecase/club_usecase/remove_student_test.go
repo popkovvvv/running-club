@@ -51,7 +51,7 @@ func TestRemoveStudent(t *testing.T) {
 			if tt.before != nil {
 				tt.before(m)
 			}
-			uc := club_usecase.NewUseCase(m.clubRepo, m.membershipRepo, m.userRepo, m.activityRepo, m.announceRepo)
+			uc := club_usecase.NewUseCase(m.clubRepo, m.membershipRepo, m.userRepo, m.activityRepo, m.announceRepo, m.planWeekRepo)
 			err := uc.RemoveStudent(context.Background(), coachID, studentID)
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)
