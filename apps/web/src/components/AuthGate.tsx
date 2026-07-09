@@ -1,15 +1,18 @@
 import { useState } from 'react'
 import { useApp } from '../lib/store'
 
-export function AuthGate() {
+type Role = 'athlete' | 'coach'
+
+export function AuthGate({ role, onBack }: { role: Role; onBack: () => void }) {
   const { theme, login, register } = useApp()
   const [tab, setTab] = useState<'login' | 'register'>('login')
-  const [role, setRole] = useState<'athlete' | 'coach'>('athlete')
   const [name, setName] = useState('')
-  const [email, setEmail] = useState('nikita@pulse.run')
-  const [password, setPassword] = useState('password')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+
+  const roleLabel = role === 'coach' ? 'Тренер' : 'Спортсмен'
 
   const submit = async () => {
     setBusy(true)
@@ -38,6 +41,17 @@ export function AuthGate() {
         <div style={{ fontSize: 13, color: theme.dim, fontWeight: 600, marginTop: 4 }}>Клуб бегового прогресса</div>
       </div>
       <div className="card">
+        <button
+          data-testid="auth-back"
+          className="btn"
+          onClick={onBack}
+          style={{ background: 'transparent', color: theme.dim, padding: 0, marginBottom: 14, fontSize: 13 }}
+        >
+          ← Сменить роль
+        </button>
+        <div style={{ fontSize: 12, color: theme.dim, fontWeight: 700, marginBottom: 14 }}>
+          Вход как <span style={{ color: theme.accent }}>{roleLabel}</span>
+        </div>
         <div style={{ display: 'flex', background: theme.card2, borderRadius: 12, padding: 4, gap: 4, marginBottom: 18 }}>
           <button className="btn" onClick={() => setTab('login')} style={{ flex: 1, padding: '10px 0', borderRadius: 9, background: tab === 'login' ? theme.accent : 'transparent', color: tab === 'login' ? theme.onAccent : theme.dim }}>Вход</button>
           <button className="btn" onClick={() => setTab('register')} style={{ flex: 1, padding: '10px 0', borderRadius: 9, background: tab === 'register' ? theme.accent : 'transparent', color: tab === 'register' ? theme.onAccent : theme.dim }}>Регистрация</button>
@@ -50,11 +64,6 @@ export function AuthGate() {
           style={{ width: '100%', background: theme.card2, border: `1px solid ${theme.line}`, borderRadius: 12, padding: 14, color: theme.text, marginBottom: 10, outline: 'none' }} />
         <input data-testid="password-input" type="password" placeholder="Пароль" value={password} onChange={(e) => setPassword(e.target.value)}
           style={{ width: '100%', background: theme.card2, border: `1px solid ${theme.line}`, borderRadius: 12, padding: 14, color: theme.text, marginBottom: 16, outline: 'none' }} />
-        <div style={{ fontSize: 11, fontWeight: 800, color: theme.dim, letterSpacing: '.5px', marginBottom: 8 }}>ВЫ ВХОДИТЕ КАК</div>
-        <div style={{ display: 'flex', background: theme.card2, borderRadius: 12, padding: 4, gap: 4, marginBottom: 20 }}>
-          <button className="btn" onClick={() => setRole('athlete')} style={{ flex: 1, padding: '10px 0', borderRadius: 9, background: role === 'athlete' ? theme.accent : 'transparent', color: role === 'athlete' ? theme.onAccent : theme.dim }}>Спортсмен</button>
-          <button className="btn" onClick={() => setRole('coach')} style={{ flex: 1, padding: '10px 0', borderRadius: 9, background: role === 'coach' ? theme.accent : 'transparent', color: role === 'coach' ? theme.onAccent : theme.dim }}>Тренер</button>
-        </div>
         {error && <div data-testid="auth-error" style={{ color: theme.accent, fontSize: 13, marginBottom: 12 }}>{error}</div>}
         <button data-testid="auth-submit" className="btn" disabled={busy} onClick={() => void submit()}
           style={{ width: '100%', background: theme.accent, color: theme.onAccent, borderRadius: 13, padding: 15, fontSize: 15 }}>
