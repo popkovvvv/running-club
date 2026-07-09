@@ -50,15 +50,17 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 		return fmt.Errorf("insert membership: %w", err)
 	}
 
+	july21 := time.Date(2026, 7, 21, 0, 0, 0, 0, time.UTC)
+	july23 := time.Date(2026, 7, 23, 0, 0, 0, 0, time.UTC)
 	announces := []*model.Announce{
-		model.NewAnnounce(clubID, "Стадион «Зина»", "Вт, 21 июля", "19:50", "Основная группа", "ОФП + темповая работа. Приходите на разминку к 19:30."),
-		model.NewAnnounce(clubID, "ЛЭМЗ", "Чт, 23 июля", "19:50", "Основная группа", "Интервалы 5×800 м через 400 м трусцой. Форма по погоде."),
+		model.NewAnnounce(clubID, "Стадион «Зина»", "Вт, 21 июля", "19:50", "Основная группа", "ОФП + темповая работа. Приходите на разминку к 19:30.", &july21),
+		model.NewAnnounce(clubID, "ЛЭМЗ", "Чт, 23 июля", "19:50", "Основная группа", "Интервалы 5×800 м через 400 м трусцой. Форма по погоде.", &july23),
 	}
 	announces[0].GoingCount = 8
 	announces[1].GoingCount = 6
 	for _, a := range announces {
-		_, err = pool.Exec(ctx, `INSERT INTO announces (id,club_id,place,day_label,time,group_name,note,going_count,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-			a.ID, a.ClubID, a.Place, a.DayLabel, a.Time, a.GroupName, a.Note, a.GoingCount, a.CreatedAt)
+		_, err = pool.Exec(ctx, `INSERT INTO announces (id,club_id,place,day_label,time,group_name,note,starts_on,going_count,created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+			a.ID, a.ClubID, a.Place, a.DayLabel, a.Time, a.GroupName, a.Note, a.StartsOn, a.GoingCount, a.CreatedAt)
 		if err != nil {
 			return fmt.Errorf("insert announce: %w", err)
 		}

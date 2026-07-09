@@ -12,12 +12,13 @@ func NewAuthResponse(token string, user UserView) *AuthResponse {
 }
 
 type UserView struct {
-	ID     uuid.UUID  `json:"id"`
-	Name   string     `json:"name"`
-	Email  string     `json:"email"`
-	Role   string     `json:"role"`
-	InClub bool       `json:"inClub"`
-	ClubID *uuid.UUID `json:"clubId,omitempty"`
+	ID        uuid.UUID  `json:"id"`
+	Name      string     `json:"name"`
+	Email     string     `json:"email"`
+	Role      string     `json:"role"`
+	InClub    bool       `json:"inClub"`
+	NeedsClub bool       `json:"needsClub"`
+	ClubID    *uuid.UUID `json:"clubId,omitempty"`
 }
 
 func NewUserView(id uuid.UUID, name, email, role string) *UserView {
@@ -37,5 +38,11 @@ func (v *UserView) WithClub(clubID uuid.UUID) *UserView {
 
 func (v *UserView) MarkInClub() *UserView {
 	v.InClub = true
+	return v
+}
+
+func (v *UserView) MarkNeedsClub() *UserView {
+	v.NeedsClub = true
+	v.InClub = false
 	return v
 }

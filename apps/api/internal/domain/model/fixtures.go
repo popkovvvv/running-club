@@ -15,7 +15,7 @@ func MembershipFixture(id, userID, clubID uuid.UUID) *Membership {
 }
 
 func AnnounceFixture(id, clubID uuid.UUID, place, dayLabel, timeLabel, groupName string) *Announce {
-	a := NewAnnounce(clubID, place, dayLabel, timeLabel, groupName, "")
+	a := NewAnnounce(clubID, place, dayLabel, timeLabel, groupName, "", nil)
 	a.ID = id
 	return a
 }

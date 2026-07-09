@@ -14,11 +14,12 @@ type Announce struct {
 	Time       string
 	GroupName  string
 	Note       string
+	StartsOn   *time.Time
 	GoingCount int
 	CreatedAt  time.Time
 }
 
-func NewAnnounce(clubID uuid.UUID, place, dayLabel, timeLabel, groupName, note string) *Announce {
+func NewAnnounce(clubID uuid.UUID, place, dayLabel, timeLabel, groupName, note string, startsOn *time.Time) *Announce {
 	return &Announce{
 		ID:         uuid.New(),
 		ClubID:     clubID,
@@ -27,6 +28,7 @@ func NewAnnounce(clubID uuid.UUID, place, dayLabel, timeLabel, groupName, note s
 		Time:       timeLabel,
 		GroupName:  groupName,
 		Note:       note,
+		StartsOn:   startsOn,
 		GoingCount: 0,
 		CreatedAt:  time.Now().UTC(),
 	}

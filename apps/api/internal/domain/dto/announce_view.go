@@ -35,11 +35,12 @@ func NewAnnounceView(
 }
 
 type CreateAnnounceRequest struct {
-	Place string `json:"place"`
-	Day   string `json:"day"`
-	Time  string `json:"time"`
-	Group string `json:"group"`
-	Note  string `json:"note"`
+	Place    string `json:"place"`
+	Day      string `json:"day"`
+	Time     string `json:"time"`
+	Group    string `json:"group"`
+	Note     string `json:"note"`
+	StartsOn string `json:"startsOn,omitempty"`
 }
 
 type CalendarResponse struct {
