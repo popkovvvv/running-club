@@ -52,7 +52,7 @@ func TestCreate(t *testing.T) {
 			if tt.before != nil {
 				tt.before(m)
 			}
-			uc := club_usecase.NewUseCase(m.clubRepo, m.membershipRepo, m.userRepo)
+			uc := club_usecase.NewUseCase(m.clubRepo, m.membershipRepo, m.userRepo, m.activityRepo, m.announceRepo)
 			view, err := uc.Create(context.Background(), coachID, tt.req)
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

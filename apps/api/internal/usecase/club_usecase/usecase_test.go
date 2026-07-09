@@ -12,6 +12,8 @@ type usecaseMocks struct {
 	clubRepo       *mocks.ClubRepo
 	membershipRepo *mocks.MembershipRepo
 	userRepo       *mocks.UserRepo
+	activityRepo   *mocks.ActivityRepo
+	announceRepo   *mocks.AnnounceRepo
 }
 
 func newMocks(t *testing.T) usecaseMocks {
@@ -20,5 +22,7 @@ func newMocks(t *testing.T) usecaseMocks {
 		clubRepo:       mocks.NewClubRepo(t),
 		membershipRepo: mocks.NewMembershipRepo(t),
 		userRepo:       mocks.NewUserRepo(t),
+		activityRepo:   mocks.NewActivityRepo(t),
+		announceRepo:   mocks.NewAnnounceRepo(t),
 	}
 }

@@ -104,6 +104,50 @@ func (r *Repo) HasSignup(ctx context.Context, announceID, athleteID uuid.UUID) (
 	return n > 0, nil
 }
 
+func (r *Repo) AttendanceStats(ctx context.Context, clubID uuid.UUID) (signedUp int, capacity int, err error) {
+	var announceCount int
+	err = r.pool.QueryRow(ctx, `
+		SELECT
+			COUNT(*)::int,
+			COALESCE(SUM(going_count), 0)::int
+		FROM announces
+		WHERE club_id=$1`, clubID).Scan(&announceCount, &capacity)
+	if err != nil {
+		return 0, 0, fmt.Errorf("QueryRow: %w", err)
+	}
+	if announceCount == 0 {
+		return 0, 0, nil
+	}
+	err = r.pool.QueryRow(ctx, `
+		SELECT COUNT(*)::int
+		FROM announce_signups s
+		JOIN announces a ON a.id = s.announce_id
+		WHERE a.club_id=$1`, clubID).Scan(&signedUp)
+	if err != nil {
+		return 0, 0, fmt.Errorf("QueryRow: %w", err)
+	}
+	return signedUp, capacity, nil
+}
+
+func (r *Repo) NextLabelForAthlete(ctx context.Context, clubID, athleteID uuid.UUID) (string, error) {
+	var dayLabel, place string
+	err := r.pool.QueryRow(ctx, `
+		SELECT a.day_label, a.place
+		FROM announces a
+		JOIN announce_signups s ON s.announce_id = a.id
+		WHERE a.club_id=$1 AND s.athlete_id=$2
+			AND (a.starts_on IS NULL OR a.starts_on >= CURRENT_DATE)
+		ORDER BY a.starts_on NULLS LAST, a.created_at
+		LIMIT 1`, clubID, athleteID).Scan(&dayLabel, &place)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", model.ErrNotFound
+		}
+		return "", fmt.Errorf("QueryRow: %w", err)
+	}
+	return dayLabel + " · " + place, nil
+}
+
 type scannable interface {
 	Scan(dest ...any) error
 }

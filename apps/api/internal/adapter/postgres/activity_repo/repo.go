@@ -133,3 +133,26 @@ func (r *Repo) FindMonthStats(ctx context.Context, userID uuid.UUID) ([]model.Mo
 	}
 	return out, rows.Err()
 }
+
+func (r *Repo) SumDistByUser(ctx context.Context, userID uuid.UUID) (float64, error) {
+	var sum float64
+	err := r.pool.QueryRow(ctx, `
+		SELECT COALESCE(SUM(dist_km), 0) FROM activities WHERE user_id=$1`, userID).Scan(&sum)
+	if err != nil {
+		return 0, fmt.Errorf("QueryRow: %w", err)
+	}
+	return sum, nil
+}
+
+func (r *Repo) SumDistByClubAthletes(ctx context.Context, clubID uuid.UUID) (float64, error) {
+	var sum float64
+	err := r.pool.QueryRow(ctx, `
+		SELECT COALESCE(SUM(a.dist_km), 0)
+		FROM activities a
+		JOIN memberships m ON m.user_id = a.user_id
+		WHERE m.club_id=$1 AND m.status='active'`, clubID).Scan(&sum)
+	if err != nil {
+		return 0, fmt.Errorf("QueryRow: %w", err)
+	}
+	return sum, nil
+}

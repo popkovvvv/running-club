@@ -12,6 +12,8 @@ type (
 		clubRepo       clubRepo
 		membershipRepo membershipRepo
 		userRepo       userRepo
+		activityRepo   activityRepo
+		announceRepo   announceRepo
 	}
 
 	clubRepo interface {
@@ -34,8 +36,28 @@ type (
 		GetByID(ctx context.Context, id uuid.UUID) (*model.User, error)
 		FindAthletesByClub(ctx context.Context, clubID uuid.UUID) ([]*model.User, error)
 	}
+
+	activityRepo interface {
+		SumDistByUser(ctx context.Context, userID uuid.UUID) (float64, error)
+	}
+
+	announceRepo interface {
+		NextLabelForAthlete(ctx context.Context, clubID, athleteID uuid.UUID) (string, error)
+	}
 )
 
-func NewUseCase(clubRepo clubRepo, membershipRepo membershipRepo, userRepo userRepo) *UseCase {
-	return &UseCase{clubRepo: clubRepo, membershipRepo: membershipRepo, userRepo: userRepo}
+func NewUseCase(
+	clubRepo clubRepo,
+	membershipRepo membershipRepo,
+	userRepo userRepo,
+	activityRepo activityRepo,
+	announceRepo announceRepo,
+) *UseCase {
+	return &UseCase{
+		clubRepo:       clubRepo,
+		membershipRepo: membershipRepo,
+		userRepo:       userRepo,
+		activityRepo:   activityRepo,
+		announceRepo:   announceRepo,
+	}
 }

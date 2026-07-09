@@ -3,6 +3,8 @@ package analytics_usecase
 import (
 	"context"
 	"fmt"
+	"math"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -19,15 +21,45 @@ func (u *UseCase) ClubAnalytics(ctx context.Context, coachID uuid.UUID) (*dto.An
 	if err != nil {
 		return nil, fmt.Errorf("userRepo.FindAthletesByClub: %w", err)
 	}
-	students := make([]dto.StudentView, 0, len(users))
-	for i, usr := range users {
-		comp := 80
-		if i%3 == 0 {
-			comp = 90
-		}
-		students = append(students, dto.NewStudentView(usr.ID, initials(usr.Name), usr.Name, "Прогресс недели", "24.6", comp))
+	clubKm, err := u.activityRepo.SumDistByClubAthletes(ctx, club.ID)
+	if err != nil {
+		return nil, fmt.Errorf("activityRepo.SumDistByClubAthletes: %w", err)
 	}
-	return dto.NewAnalyticsResponse(186.1, 86, students), nil
+	signedUp, capacity, err := u.announceRepo.AttendanceStats(ctx, club.ID)
+	if err != nil {
+		return nil, fmt.Errorf("announceRepo.AttendanceStats: %w", err)
+	}
+	attendance := attendancePct(signedUp, capacity)
+	students := make([]dto.StudentView, 0, len(users))
+	for _, usr := range users {
+		km, err := u.activityRepo.SumDistByUser(ctx, usr.ID)
+		if err != nil {
+			return nil, fmt.Errorf("activityRepo.SumDistByUser: %w", err)
+		}
+		students = append(students, dto.NewStudentView(
+			usr.ID,
+			initials(usr.Name),
+			usr.Name,
+			"Прогресс недели",
+			strconv.FormatFloat(km, 'f', 1, 64),
+			0,
+		))
+	}
+	return dto.NewAnalyticsResponse(clubKm, attendance, students), nil
+}
+
+func attendancePct(signedUp, capacity int) int {
+	if signedUp == 0 && capacity == 0 {
+		return 0
+	}
+	denom := capacity
+	if denom == 0 {
+		denom = signedUp
+		if denom < 1 {
+			denom = 1
+		}
+	}
+	return int(math.Round(100 * float64(signedUp) / float64(denom)))
 }
 
 func initials(name string) string {

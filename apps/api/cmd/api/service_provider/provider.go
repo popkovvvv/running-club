@@ -71,11 +71,11 @@ func (s *ServiceProvider) Handler() http.Handler {
 	activityRepo := activity_repo.NewRepo(s.pool)
 
 	authUC := auth_usecase.NewUseCase(userRepo, membershipRepo, clubRepo, s.jwt)
-	clubUC := club_usecase.NewUseCase(clubRepo, membershipRepo, userRepo)
+	clubUC := club_usecase.NewUseCase(clubRepo, membershipRepo, userRepo, activityRepo, announceRepo)
 	scheduleUC := schedule_usecase.NewUseCase(announceRepo, clubRepo, membershipRepo)
 	workoutUC := workout_usecase.NewUseCase(workoutRepo)
 	activityUC := activity_usecase.NewUseCase(activityRepo)
-	analyticsUC := analytics_usecase.NewUseCase(clubRepo, userRepo)
+	analyticsUC := analytics_usecase.NewUseCase(clubRepo, userRepo, activityRepo, announceRepo)
 
 	return router.New(router.Handlers{
 		Auth:      auth.NewHandler(authUC),
