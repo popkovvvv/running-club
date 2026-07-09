@@ -37,17 +37,17 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	}
 	if n > 0 {
 		_, _ = pool.Exec(ctx, `UPDATE memberships SET status='active', updated_at=NOW() WHERE user_id=$1 AND club_id=$2`, athleteID, clubID)
-		return nil
-	}
-	_, err = pool.Exec(ctx, `INSERT INTO clubs (id,name,invite_code,accent_hex,coach_id,created_at) VALUES ($1,'PULSE','PULSE-7K42','#ff5c22',$2,$3)`,
-		clubID, coachID, now)
-	if err != nil {
-		return fmt.Errorf("insert club: %w", err)
-	}
-	_, err = pool.Exec(ctx, `INSERT INTO memberships (id,user_id,club_id,status,created_at,updated_at) VALUES ($1,$2,$3,'active',$4,$4)`,
-		uuid.New(), athleteID, clubID, now)
-	if err != nil {
-		return fmt.Errorf("insert membership: %w", err)
+	} else {
+		_, err = pool.Exec(ctx, `INSERT INTO clubs (id,name,invite_code,accent_hex,coach_id,created_at) VALUES ($1,'PULSE','PULSE-7K42','#ff5c22',$2,$3)`,
+			clubID, coachID, now)
+		if err != nil {
+			return fmt.Errorf("insert club: %w", err)
+		}
+		_, err = pool.Exec(ctx, `INSERT INTO memberships (id,user_id,club_id,status,created_at,updated_at) VALUES ($1,$2,$3,'active',$4,$4)`,
+			uuid.New(), athleteID, clubID, now)
+		if err != nil {
+			return fmt.Errorf("insert membership: %w", err)
+		}
 	}
 
 	planWeeks := []*model.PlanWeek{
@@ -57,11 +57,16 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 		model.NewPlanWeek(clubID, 3, "03.08 – 09.08", "33 км"),
 	}
 	for _, pw := range planWeeks {
-		_, err = pool.Exec(ctx, `INSERT INTO plan_weeks (id,club_id,week_index,range_label,plan_label) VALUES ($1,$2,$3,$4,$5)`,
+		_, err = pool.Exec(ctx, `INSERT INTO plan_weeks (id,club_id,week_index,range_label,plan_label) VALUES ($1,$2,$3,$4,$5)
+			ON CONFLICT (club_id, week_index) DO UPDATE SET range_label=EXCLUDED.range_label, plan_label=EXCLUDED.plan_label`,
 			pw.ID, pw.ClubID, pw.WeekIndex, pw.RangeLabel, pw.PlanLabel)
 		if err != nil {
 			return fmt.Errorf("insert plan_week: %w", err)
 		}
+	}
+
+	if n > 0 {
+		return nil
 	}
 
 	july21 := time.Date(2026, 7, 21, 0, 0, 0, 0, time.UTC)
