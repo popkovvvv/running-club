@@ -22,9 +22,9 @@ func NewRepo(pool *pgxpool.Pool) *Repo {
 
 func (r *Repo) Create(ctx context.Context, a *model.Announce) error {
 	_, err := r.pool.Exec(ctx, `
-		INSERT INTO announces (id, club_id, place, day_label, time, group_name, note, going_count, created_at)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-		a.ID, a.ClubID, a.Place, a.DayLabel, a.Time, a.GroupName, a.Note, a.GoingCount, a.CreatedAt)
+		INSERT INTO announces (id, club_id, place, day_label, time, group_name, note, starts_on, going_count, created_at)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+		a.ID, a.ClubID, a.Place, a.DayLabel, a.Time, a.GroupName, a.Note, a.StartsOn, a.GoingCount, a.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("exec: %w", err)
 	}
@@ -33,7 +33,7 @@ func (r *Repo) Create(ctx context.Context, a *model.Announce) error {
 
 func (r *Repo) FindByClub(ctx context.Context, clubID uuid.UUID) ([]*model.Announce, error) {
 	rows, err := r.pool.Query(ctx, `
-		SELECT id, club_id, place, day_label, time, group_name, note, going_count, created_at
+		SELECT id, club_id, place, day_label, time, group_name, note, starts_on, going_count, created_at
 		FROM announces WHERE club_id=$1 ORDER BY created_at DESC`, clubID)
 	if err != nil {
 		return nil, fmt.Errorf("Query: %w", err)
@@ -52,7 +52,7 @@ func (r *Repo) FindByClub(ctx context.Context, clubID uuid.UUID) ([]*model.Annou
 
 func (r *Repo) GetByID(ctx context.Context, id uuid.UUID) (*model.Announce, error) {
 	row := r.pool.QueryRow(ctx, `
-		SELECT id, club_id, place, day_label, time, group_name, note, going_count, created_at
+		SELECT id, club_id, place, day_label, time, group_name, note, starts_on, going_count, created_at
 		FROM announces WHERE id=$1`, id)
 	a, err := scanAnnounce(row)
 	if err != nil {
@@ -155,7 +155,10 @@ type scannable interface {
 func scanAnnounce(row scannable) (*model.Announce, error) {
 	var a model.Announce
 	var created time.Time
-	if err := row.Scan(&a.ID, &a.ClubID, &a.Place, &a.DayLabel, &a.Time, &a.GroupName, &a.Note, &a.GoingCount, &created); err != nil {
+	if err := row.Scan(
+		&a.ID, &a.ClubID, &a.Place, &a.DayLabel, &a.Time, &a.GroupName, &a.Note,
+		&a.StartsOn, &a.GoingCount, &created,
+	); err != nil {
 		return nil, err
 	}
 	a.CreatedAt = created

@@ -3,6 +3,7 @@ package schedule_usecase
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/nikpopkov/running-club/api/internal/domain/dto"
@@ -14,7 +15,15 @@ func (u *UseCase) Publish(ctx context.Context, coachID uuid.UUID, req dto.Create
 	if err != nil {
 		return nil, fmt.Errorf("clubRepo.GetByCoachID: %w", err)
 	}
-	a := model.NewAnnounce(club.ID, req.Place, req.Day, req.Time, req.Group, req.Note, nil)
+	var startsOn *time.Time
+	if req.StartsOn != "" {
+		t, err := time.Parse("2006-01-02", req.StartsOn)
+		if err != nil {
+			return nil, fmt.Errorf("parse startsOn: %w", err)
+		}
+		startsOn = &t
+	}
+	a := model.NewAnnounce(club.ID, req.Place, req.Day, req.Time, req.Group, req.Note, startsOn)
 	if err := u.announceRepo.Create(ctx, a); err != nil {
 		return nil, fmt.Errorf("announceRepo.Create: %w", err)
 	}

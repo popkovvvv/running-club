@@ -24,6 +24,25 @@ func (u *UseCase) clubIDFor(ctx context.Context, userID uuid.UUID, role string) 
 	return m.ClubID, nil
 }
 
+func (u *UseCase) clubFor(ctx context.Context, userID uuid.UUID, role string) (*model.Club, error) {
+	if role == string(model.RoleCoach) {
+		club, err := u.clubRepo.GetByCoachID(ctx, userID)
+		if err != nil {
+			return nil, fmt.Errorf("clubRepo.GetByCoachID: %w", err)
+		}
+		return club, nil
+	}
+	m, err := u.membershipRepo.GetActiveByUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	club, err := u.clubRepo.GetByID(ctx, m.ClubID)
+	if err != nil {
+		return nil, fmt.Errorf("clubRepo.GetByID: %w", err)
+	}
+	return club, nil
+}
+
 func toAnnounceView(a *model.Announce, signed bool) dto.AnnounceView {
 	cta := "Записаться"
 	if signed {

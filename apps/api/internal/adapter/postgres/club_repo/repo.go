@@ -34,7 +34,14 @@ func (r *Repo) Create(ctx context.Context, c *model.Club) error {
 func (r *Repo) GetByID(ctx context.Context, id uuid.UUID) (*model.Club, error) {
 	row := r.pool.QueryRow(ctx, `
 		SELECT id, name, invite_code, accent_hex, coach_id, created_at FROM clubs WHERE id=$1`, id)
-	return scanClub(row)
+	c, err := scanClub(row)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, model.ErrNotFound
+		}
+		return nil, fmt.Errorf("QueryRow: %w", err)
+	}
+	return c, nil
 }
 
 func (r *Repo) GetByInviteCode(ctx context.Context, code string) (*model.Club, error) {

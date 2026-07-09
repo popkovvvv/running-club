@@ -17,7 +17,7 @@ type useCase interface {
 	Publish(ctx context.Context, coachID uuid.UUID, req dto.CreateAnnounceRequest) (*dto.AnnounceView, error)
 	Signup(ctx context.Context, athleteID, announceID uuid.UUID) (*dto.AnnounceView, error)
 	Unsignup(ctx context.Context, athleteID, announceID uuid.UUID) (*dto.AnnounceView, error)
-	Calendar(ctx context.Context, accent, onAccent, accentSoft, text string) (*dto.CalendarResponse, error)
+	Calendar(ctx context.Context, userID uuid.UUID, role string) (*dto.CalendarResponse, error)
 }
 
 type Handler struct {
@@ -84,7 +84,7 @@ func (h *Handler) Unsignup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Calendar(w http.ResponseWriter, r *http.Request) {
-	res, err := h.uc.Calendar(r.Context(), "#ff5c22", "#ffffff", "rgba(255,92,34,.15)", "#f4f6f7")
+	res, err := h.uc.Calendar(r.Context(), middleware.UserID(r.Context()), middleware.Role(r.Context()))
 	if err != nil {
 		response.Error(w, err)
 		return

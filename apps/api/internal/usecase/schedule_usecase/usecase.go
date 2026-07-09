@@ -26,6 +26,7 @@ type (
 
 	clubResolver interface {
 		GetByCoachID(ctx context.Context, coachID uuid.UUID) (*model.Club, error)
+		GetByID(ctx context.Context, id uuid.UUID) (*model.Club, error)
 	}
 
 	membershipRepo interface {
