@@ -9,7 +9,7 @@ packages:
     interfaces:
       userRepo:
       membershipRepo:
-      clubCreator:
+      clubRepo:
   github.com/nikpopkov/running-club/api/internal/usecase/club_usecase:
     interfaces:
       clubRepo:

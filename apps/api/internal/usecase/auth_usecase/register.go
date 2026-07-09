@@ -34,16 +34,5 @@ func (u *UseCase) Register(ctx context.Context, req dto.RegisterRequest) (*dto.A
 	if err := u.userRepo.Create(ctx, user); err != nil {
 		return nil, fmt.Errorf("userRepo.Create: %w", err)
 	}
-	if role == model.RoleCoach {
-		club := model.NewClub(
-			"PULSE",
-			"PULSE-"+strings.ToUpper(user.ID.String()[:4]),
-			"#ff5c22",
-			user.ID,
-		)
-		if err := u.clubRepo.Create(ctx, club); err != nil {
-			return nil, fmt.Errorf("clubRepo.Create: %w", err)
-		}
-	}
 	return u.tokenResponse(ctx, user)
 }

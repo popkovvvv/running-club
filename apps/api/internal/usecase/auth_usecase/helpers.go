@@ -30,7 +30,14 @@ func (u *UseCase) toView(ctx context.Context, user *model.User) (*dto.UserView, 
 		return nil, fmt.Errorf("membershipRepo.GetActiveByUser: %w", err)
 	}
 	if user.Role == model.RoleCoach {
-		view.MarkInClub()
+		club, err := u.clubRepo.GetByCoachID(ctx, user.ID)
+		if err == nil {
+			return view.WithClub(club.ID), nil
+		}
+		if !errors.Is(err, model.ErrNotFound) {
+			return nil, fmt.Errorf("clubRepo.GetByCoachID: %w", err)
+		}
+		return view.MarkNeedsClub(), nil
 	}
 	return view, nil
 }

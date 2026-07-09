@@ -17,11 +17,13 @@ import (
 func TestRegister(t *testing.T) {
 	t.Parallel()
 	tests := []struct {
-		name     string
-		req      dto.RegisterRequest
-		before   func(m usecaseMocks)
-		wantErr  error
-		wantRole string
+		name       string
+		req        dto.RegisterRequest
+		before     func(m usecaseMocks)
+		wantErr    error
+		wantRole   string
+		wantNeeds  *bool
+		wantInClub *bool
 	}{
 		{
 			name: "ok_athlete",
@@ -34,15 +36,17 @@ func TestRegister(t *testing.T) {
 			wantRole: "athlete",
 		},
 		{
-			name: "ok_coach",
+			name: "ok_coach_no_auto_club",
 			req:  dto.RegisterRequest{Name: "Coach", Email: "coach@b.c", Password: "secret1", Role: "coach"},
 			before: func(m usecaseMocks) {
 				m.userRepo.EXPECT().GetByEmail(mock.Anything, "coach@b.c").Return(nil, model.ErrNotFound).Once()
 				m.userRepo.EXPECT().Create(mock.Anything, mock.AnythingOfType("*model.User")).Return(nil).Once()
-				m.clubRepo.EXPECT().Create(mock.Anything, mock.AnythingOfType("*model.Club")).Return(nil).Once()
 				m.membershipRepo.EXPECT().GetActiveByUser(mock.Anything, mock.Anything).Return(nil, model.ErrNotFound).Once()
+				m.clubRepo.EXPECT().GetByCoachID(mock.Anything, mock.Anything).Return(nil, model.ErrNotFound).Once()
 			},
-			wantRole: "coach",
+			wantRole:   "coach",
+			wantNeeds:  boolPtr(true),
+			wantInClub: boolPtr(false),
 		},
 		{
 			name:    "weak_password",
@@ -80,6 +84,16 @@ func TestRegister(t *testing.T) {
 			require.NoError(t, err)
 			require.NotEmpty(t, res.Token)
 			require.Equal(t, tt.wantRole, res.User.Role)
+			if tt.wantNeeds != nil {
+				require.Equal(t, *tt.wantNeeds, res.User.NeedsClub)
+			}
+			if tt.wantInClub != nil {
+				require.Equal(t, *tt.wantInClub, res.User.InClub)
+			}
 		})
 	}
+}
+
+func boolPtr(v bool) *bool {
+	return &v
 }

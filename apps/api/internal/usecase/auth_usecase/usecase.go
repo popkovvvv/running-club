@@ -12,7 +12,7 @@ type (
 	UseCase struct {
 		userRepo       userRepo
 		membershipRepo membershipRepo
-		clubRepo       clubCreator
+		clubRepo       clubRepo
 		jwt            *authjwt.Manager
 	}
 
@@ -26,11 +26,12 @@ type (
 		GetActiveByUser(ctx context.Context, userID uuid.UUID) (*model.Membership, error)
 	}
 
-	clubCreator interface {
+	clubRepo interface {
 		Create(ctx context.Context, c *model.Club) error
+		GetByCoachID(ctx context.Context, coachID uuid.UUID) (*model.Club, error)
 	}
 )
 
-func NewUseCase(userRepo userRepo, membershipRepo membershipRepo, clubRepo clubCreator, jwt *authjwt.Manager) *UseCase {
+func NewUseCase(userRepo userRepo, membershipRepo membershipRepo, clubRepo clubRepo, jwt *authjwt.Manager) *UseCase {
 	return &UseCase{userRepo: userRepo, membershipRepo: membershipRepo, clubRepo: clubRepo, jwt: jwt}
 }
