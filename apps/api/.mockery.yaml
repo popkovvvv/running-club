@@ -1,0 +1,32 @@
+with-expecter: true
+disable-version-string: true
+dir: '{{.InterfaceDir}}/mocks'
+outpkg: mocks
+filename: '{{.InterfaceName | snakecase}}.go'
+mockname: '{{.InterfaceName | camelcase | firstUpper}}'
+packages:
+  github.com/nikpopkov/running-club/api/internal/usecase/auth_usecase:
+    interfaces:
+      userRepo:
+      membershipRepo:
+      clubCreator:
+  github.com/nikpopkov/running-club/api/internal/usecase/club_usecase:
+    interfaces:
+      clubRepo:
+      membershipRepo:
+      userRepo:
+  github.com/nikpopkov/running-club/api/internal/usecase/schedule_usecase:
+    interfaces:
+      announceRepo:
+      clubResolver:
+      membershipRepo:
+  github.com/nikpopkov/running-club/api/internal/usecase/workout_usecase:
+    interfaces:
+      workoutRepo:
+  github.com/nikpopkov/running-club/api/internal/usecase/activity_usecase:
+    interfaces:
+      activityRepo:
+  github.com/nikpopkov/running-club/api/internal/usecase/analytics_usecase:
+    interfaces:
+      clubRepo:
+      userRepo:

@@ -1,0 +1,52 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+html, body, #root { height: 100%; }
+body {
+  background: #050607;
+  color: var(--text);
+  font-family: var(--font), system-ui, sans-serif;
+}
+.scrl { scrollbar-width: none; }
+.scrl::-webkit-scrollbar { display: none; }
+.phone {
+  width: min(390px, 100%);
+  height: min(844px, 100dvh);
+  margin: 0 auto;
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 46px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  box-shadow: 0 40px 90px rgba(0,0,0,.55);
+  position: relative;
+}
+@media (max-width: 430px) {
+  .phone { width: 100%; height: 100dvh; border-radius: 0; border: none; }
+}
+.btn {
+  border: none; cursor: pointer; font-family: inherit; font-weight: 800;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.nav {
+  position: absolute; left: 12px; right: 12px; bottom: 18px;
+  display: flex; background: color-mix(in srgb, var(--card) 92%, transparent);
+  border: 1px solid var(--line); border-radius: 22px; padding: 8px 6px; gap: 2px;
+  backdrop-filter: blur(12px);
+}
+.nav button {
+  flex: 1; border: none; background: transparent; color: var(--faint);
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  font-size: 10px; font-weight: 700; cursor: pointer; font-family: inherit;
+}
+.nav button.active { color: var(--accent); }
+@keyframes scrfade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.fade { animation: scrfade .3s ease; }
+input, button { font-family: inherit; }

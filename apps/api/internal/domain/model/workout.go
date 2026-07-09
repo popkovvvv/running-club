@@ -1,0 +1,82 @@
+package model
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
+type WorkoutKind string
+
+const (
+	WorkoutPlan    WorkoutKind = "plan"
+	WorkoutOwn     WorkoutKind = "own"
+	WorkoutBuilder WorkoutKind = "builder"
+)
+
+type Workout struct {
+	ID        uuid.UUID
+	ClubID    *uuid.UUID
+	UserID    uuid.UUID
+	Kind      WorkoutKind
+	DayLabel  string
+	Tag       string
+	Title     string
+	DistKm    float64
+	Duration  string
+	Pace      string
+	HR        string
+	WeekIndex int
+	CreatedAt time.Time
+	Segments  []Segment
+}
+
+func NewWorkout(
+	userID uuid.UUID,
+	kind WorkoutKind,
+	dayLabel, tag, title string,
+	distKm float64,
+	duration, pace, hr string,
+	weekIndex int,
+) *Workout {
+	return &Workout{
+		ID:        uuid.New(),
+		UserID:    userID,
+		Kind:      kind,
+		DayLabel:  dayLabel,
+		Tag:       tag,
+		Title:     title,
+		DistKm:    distKm,
+		Duration:  duration,
+		Pace:      pace,
+		HR:        hr,
+		WeekIndex: weekIndex,
+		CreatedAt: time.Now().UTC(),
+	}
+}
+
+func (w *Workout) AddSegment(kind, title string, distKm float64, pace string, sortOrder int) {
+	w.Segments = append(w.Segments, NewSegment(kind, title, distKm, pace, sortOrder))
+	w.DistKm += distKm
+}
+
+type Segment struct {
+	ID        uuid.UUID
+	WorkoutID uuid.UUID
+	Kind      string
+	Title     string
+	DistKm    float64
+	Pace      string
+	SortOrder int
+}
+
+func NewSegment(kind, title string, distKm float64, pace string, sortOrder int) Segment {
+	return Segment{
+		ID:        uuid.New(),
+		Kind:      kind,
+		Title:     title,
+		DistKm:    distKm,
+		Pace:      pace,
+		SortOrder: sortOrder,
+	}
+}

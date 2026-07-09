@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+  .scrl::-webkit-scrollbar{display:none}
+  .scrl{scrollbar-width:none}
+  @keyframes scrfade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes sheetup{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+<div style="width:390px;height:844px;position:relative;background:{{ t.bg }};color:{{ t.text }};font-family:{{ t.font }},system-ui,sans-serif;border-radius:46px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 40px 90px rgba(0,0,0,.55);border:1px solid {{ t.line }}">
+
+  <!-- status bar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 26px 6px;font-size:14px;font-weight:700;flex:none">
+    <span>9:41</span>
+    <div style="display:flex;align-items:center;gap:6px">
+      <div style="display:flex;gap:2px;align-items:flex-end;height:11px">
+        <span style="width:3px;height:5px;background:{{ t.text }};border-radius:1px"></span>
+        <span style="width:3px;height:7px;background:{{ t.text }};border-radius:1px"></span>
+        <span style="width:3px;height:9px;background:{{ t.text }};border-radius:1px"></span>
+        <span style="width:3px;height:11px;background:{{ t.text }};border-radius:1px"></span>
+      </div>
+      <div style="width:22px;height:11px;border:1.5px solid {{ t.text }};border-radius:3px;position:relative;display:flex;align-items:center;padding:1.5px">
+        <div style="width:70%;height:100%;background:{{ t.accent }};border-radius:1px"></div>
+        <div style="position:absolute;right:-3px;top:3px;width:2px;height:5px;background:{{ t.text }};border-radius:0 1px 1px 0"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTH OVERLAY -->
+  <sc-if value="{{ notAuthed }}" hint-placeholder-val="{{ true }}">
+  <div style="position:absolute;inset:0;z-index:50;background:radial-gradient(120% 70% at 50% 0%,{{ t.card }} 0%,{{ t.bg }} 55%);display:flex;flex-direction:column;padding:70px 26px 34px">
+    <div style="flex:none;text-align:center;margin-bottom:28px">
+      <div style="font-family:{{ t.display }},sans-serif;font-size:44px;font-weight:900;letter-spacing:1px;color:{{ t.accent }}">{{ t.name }}</div>
+      <div style="font-size:13px;color:{{ t.dim }};font-weight:600;margin-top:4px">Клуб бегового прогресса</div>
+    </div>
+
+    <div style="background:{{ t.card }};border:1px solid {{ t.line }};border-radius:{{ t.radius }};padding:20px">
+      <div style="display:flex;background:{{ t.card2 }};border-radius:12px;padding:4px;gap:4px;margin-bottom:18px">
+        <button onClick="{{ showLoginTab }}" style="flex:1;border:none;cursor:pointer;padding:10px 0;border-radius:9px;font-family:{{ t.font }};font-weight:700;font-size:13px;background:{{ loginBg }};color:{{ loginFg }}">Вход</button>
+        <button onClick="{{ showRegisterTab }}" style="flex:1;border:none;cursor:pointer;padding:10px 0;border-radius:9px;font-family:{{ t.font }};font-weight:700;font-size:13px;background:{{ regBg }};color:{{ regFg }}">Регистрация</button>
+      </div>
+
+      <sc-if value="{{ isRegister }}" hint-placeholder-val="{{ false }}">
+      <input placeholder="Имя и фамилия" style="width:100%;background:{{ t.card2 }};border:1px solid {{ t.line }};border-radius:12px;padding:14px;color:{{ t.text }};font-family:{{ t.font }};font-size:14px;margin-bottom:10px;outline:none">
+      </sc-if>
+      <input placeholder="Логин или e-mail" style="width:100%;background:{{ t.card2 }};border:1px solid {{ t.line }};border-radius:12px;padding:14px;color:{{ t.text }};font-family:{{ t.font }};font-size:14px;margin-bottom:10px;outline:none">
+      <input type="password" placeholder="Пароль" style="width:100%;background:{{ t.card2 }};border:1px solid {{ t.line }};border-radius:12px;padding:14px;color:{{ t.text }};font-family:{{ t.font }};font-size:14px;margin-bottom:16px;outline:none">
+
+      <div style="font-size:11px;font-weight:800;color:{{ t.dim }};letter-spacing:.5px;margin-bottom:8px">ВЫ ВХОДИТЕ КАК</div>
+      <div style="display:flex;background:{{ t.card2 }};border-radius:12px;padding:4px;gap:4px;margin-bottom:20px">
+        <button onClick="{{ pickAthlete }}" style="flex:1;border:none;cursor:pointer;padding:10px 0;border-radius:9px;font-family:{{ t.font }};font-weight:700;font-size:13px;background:{{ pAthBg }};color:{{ pAthFg }}">Спортсмен</button>
+        <button onClick="{{ pickCoach }}" style="flex:1;border:none;cursor:pointer;padding:10px 0;border-radius:9px;font-family:{{ t.font }};font-weight:700;font-size:13px;background:{{ pCoachBg }};color:{{ pCoachFg }}">Тренер</button>
+      </div>
+
+      <button onClick="{{ doLogin }}" style="width:100%;border:none;background:{{ t.accent }};color:{{ t.onAccent }};border-radius:13px;padding:15px;font-family:{{ t.font }};font-weight:800;font-size:15px;cursor:pointer">{{ authBtn }}</button>
+    </div>
+
+    <div style="flex:1"></div>
+    <div style="text-align:center;font-size:12px;color:{{ t.dim }};line-height:1.5">Продолжая, вы соглашаетесь с правилами клуба.<br>Тренировки, планы и прогресс — в одном месте.</div>
+  </div>
+  </sc-if>
+
+  <!-- header -->
+  <div style="padding:8px 18px 12px;flex:none;display:flex;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;flex-direction:column;line-height:1">
+        <span style="font-size:10px;color:{{ t.dim }};font-weight:700;letter-spacing:1px;margin-bottom:5px">КЛУБ «{{ t.name }}»</span>
+        <span style="font-family:{{ t.display }},sans-serif;font-size:22px;font-weight:800;letter-spacing:.3px">{{ cabinetTitle }}</span>
+      </div>
+      <div style="width:42px;height:42px;border-radius:50%;background:{{ t.card2 }};border:1.5px solid {{ t.accent }};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:{{ t.accent }};font-family:{{ t.display }},sans-serif">{{ avatarInit }}</div>
+    </div>
+    <!-- cabinet switch -->
+    <div style="display:flex;background:{{ t.card }};border:1px solid {{ t.line }};border-radius:14px;padding:4px;gap:4px">
+      <button onClick="{{ setAthlete }}" style="flex:1;border:none;cursor:pointer;padding:9px 0;border-radius:10px;font-family:{{ t.font }};font-weight:700;font-size:13px;background:{{ athBg }};color:{{ athCol }};transition:all .18s">Спортсмен</button>
+      <button onClick="{{ setCoach }}" style="flex:1;border:none;cursor:pointer;padding:9px 0;border-radius:10px;font-family:{{ t.font }};font-weight:700;font-size:13px;background:{{ coachBg }};color:{{ coachCol }};transition:all .18s">Тренер</button>
+    </div>
+  </div>
+
+  <!-- screen -->
+  <div class="scrl" style="flex:1;overflow-y:auto;overscroll-behavior:contain;padding:2px 16px 96px">
+
+    <!-- ===== HOME / ATHLETE ===== -->
+    <sc-if value="{{ showFeed }}" hint-placeholder-val="{{ true }}">
+    <div key="{{ screen }}" style="animation:scrfade .3s ease;display:flex;flex-direction:column;gap:14px">
+      <sc-if value="{{ inClub }}" hint-placeholder-val="{{ true }}">
+      <div onClick="{{ goSchedule }}" style="cursor:pointer;background:{{ t.card }};border:1px solid {{ t.line }};border-radius:{{ t.radius }};padding:15px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:11px;font-weight:800;letter-spacing:.6px;color:{{ t.accent }}">ГРУППОВЫЕ ТРЕНИРОВКИ</span>
+          <span style="font-size:12px;font-weight:700;color:{{ t.accent }}">Расписание →</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:46px;height:46px;border-radius:12px;background:{{ t.accentSoft }};display:flex;flex-direction:column;align-items:center;justify-content:center;flex:none;line-height:1">
+            <span style="font-family:{{ t.display }},sans-serif;font-size:18px;font-weight:800;color:{{ t.accent }}">21</span><span style="font-size:8px;color:{{ t.dim }};font-weight:700">ИЮЛ</span>
+          </div>
+          <div style="flex:1;line-height:1.35;min-width:0"><div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ближайшая: {{ nextSession.place }}</div><div style="font-size:11px;color:{{ t.dim }}">{{ nextSession.day }} · старт {{ nextSession.time }} · идут {{ nextSession.going }}</div></div>
+        </div>
+      </div>
+      </sc-if>
+      <div style="display:flex;align-items:center;gap:10px;background:{{ t.card }};border:1px solid {{ t.line }};border-radius:14px;padding:11px 14px">
+        <span style="width:9px;height:9px;border-radius:50%;background:{{ t.good }};box-shadow:0 0 10px {{ t.good }}"></span>
+        <div style="flex:1;display:flex;flex-direction:column;line-height:1.3">
+          <span style="font-size:12px;font-weight:700;letter-spacing:.6px">GARMIN · FORERUNNER 265</span>
+          <span style="font-size:11px;color:{{ t.dim }}">Синхронизировано 2 ч назад · 4 активности</span>
+        </div>
+        <span style="font-size:11px;font-weight:700;color:{{ t.accent }}">СИНХР.</span>
+      </div>
+
+      <div style="background:{{ t.card }};border:1px solid {{ t.line }};border-radius:{{ t.radius }};padding:18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <span style="font-size:13px;font-weight:700;color:{{ t.dim }};text-transform:uppercase;letter-spacing:.6px">Эта неделя</span>
+          <span style="font-size:11px;font-weight:700;color:{{ t.accent }};background:{{ t.accentSoft }};padding:4px 9px;border-radius:20px">20.07 – 26.07</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:18px">
+          <div style="position:relative;width:120px;height:120px;flex:none">
+            <svg viewBox="0 0 120 120" style="width:120px;height:120px;transform:rotate(-90deg)">
+              <circle cx="60" cy="60" r="52" fill="none" stroke="{{ t.line }}" stroke-width="11"></circle>
+              <circle cx="60" cy="60" r="52" fill="none" stroke="{{ t.accent }}" stroke-width="11" stroke-linecap="round" stroke-dasharray="{{ ringC }}" stroke-dashoffset="{{ ringO }}"></circle>
+            </svg>
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1">
+              <span style="font-family:{{ t.display }},sans-serif;font-size:30px;font-weight:800">24.6</span>
+              <span style="font-size:11px;color:{{ t.dim }};margin-top:3px">из 28 км</span>
+            </div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:11px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid {{ t.line }};padding-bottom:9px"><span style="font-size:12px;color:{{ t.dim }}">Тренировки</span><span style="font-weight:800;font-family:{{ t.display }},sans-serif;font-size:18px">4<span style="color:{{ t.dim }};font-size:13px">/6</span></span></div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid {{ t.line }};padding-bottom:9px"><span style="font-size:12px;color:{{ t.dim }}">Средний темп</span><span style="font-weight:800;font-family:{{ t.display }},sans-serif;font-size:18px">7:18</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:12px;color:{{ t.dim }}">Пульс</span><span style="font-weight:800;font-family:{{ t.display }},sans-serif;font-size:18px">144<span style="color:{{ t.dim }};font-size:12px"> уд</span></span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:linear-gradient(135deg,{{ t.accent }},{{ t.accent2 }});border-radius:{{ t.radius }};padding:18px;color:{{ t.onAccent }}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:11px;font-weight:800;letter-spacing:.8px;opacity:.85">СЕГОДНЯ · ВТОРНИК</span>
+          <span style="font-size:11px;font-weight:800;background:rgba(0,0,0,.18);padding:4px 9px;border-radius:20px">8 КМ</span>
+        </div>
+        <div style="font-family:{{ t.display }},sans-serif;font-size:24px;font-weight:800;line-height:1.05;margin-bottom:8px">Стадион «Зина» · ОФП</div>
+        <div style="font-size:13px;line-height:1.45;opacity:.92;margin-bottom:14px">Отбегать 4 км по 7:30 к 19:50, затем ОФП с группой. Заминка 1 км легко.</div>
+        <button onClick="{{ goPlan }}" style="width:100%;border:none;cursor:pointer;padding:12px;border-radius:12px;background:{{ t.onAccent }};color:{{ t.accent }};font-family:{{ t.font }};font-weight:800;font-size:14px">Открыть тренировку →</button>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+        <span style="font-family:{{ t.display }},sans-serif;font-size:19px;font-weight:800;text-transform:uppercase;letter-spacing:.4px">Лента</span>
+        <span style="font-size:12px;color:{{ t.dim }};font-weight:600">Активности группы</span>
+      </div>
+
+      <sc-for list="{{ feed }}" as="a" hint-placeholder-count="3">
+      <div style="background:{{ t.card }};border:1px solid {{ t.line }};border-radius:{{ t.radius }};padding:15px">
+        <div style="position:relative;height:132px;border-radius:14px;overflow:hidden;margin-bottom:13px;background:{{ t.card2 }}">
+          <svg viewBox="0 0 300 132" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%">
+            <g stroke="{{ t.line }}" stroke-width="1" opacity="0.55">
+              <line x1="0" y1="30" x2="300" y2="30"></line>
+              <line x1="0" y1="66" x2="300" y2="66"></line>
+              <line x1="0" y1="102" x2="300" y2="102"></line>
+              <line x1="70" y1="0" x2="70" y2="132"></line>
+              <line x1="150" y1="0" x2="150" y2="132"></line>
+              <line x1="230" y1="0" x2="230" y2="132"></line>
+            </g>
+            <g stroke="{{ t.line }}" stroke-width="4" opacity="0.9" stroke-linecap="round">
+              <line x1="0" y1="84" x2="300" y2="66"></line>
+              <line x1="110" y1="0" x2="150" y2="132"></line>
+            </g>
+            <path d="{{ a.route }}" fill="none" stroke="{{ t.accent }}" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"></path>
+            <circle cx="{{ a.sx }}" cy="{{ a.sy }}" r="5.5" fill="{{ t.good }}" stroke="{{ t.bg }}" stroke-width="2.5"></circle>
+            <circle cx="{{ a.ex }}" cy="{{ a.ey }}" r="5.5" fill="{{ t.accent }}" stroke="{{ t.bg }}" stroke-width="2.5"></circle>
+          </svg>
+          <span style="position:absolute;left:10px;bottom:10px;font-size:10px;font-weight:800;letter-spacing:.4px;color:{{ t.text }};background:rgba(0,0,0,.45);padding:4px 9px;border-radius:20px">GPS · GARMIN</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:11px;margin-bottom:12px">
+          <div style="width:38px;height:38px;border-radius:50%;background:{{ t.card2 }};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:{{ t.accent }};font-family:{{ t.display }},sans-serif;flex:none">НП</div>
+          <div style="flex:1;line-height:1.35"><div style="font-weight:700;font-size:14px">{{ a.title }}</div><div style="font-size:11px;color:{{ t.dim }}">Никита Попков · {{ a.when }}</div></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <div style="flex:1;background:{{ t.card2 }};border-radius:11px;padding:9px 6px;text-align:center"><div style="font-family:{{ t.display }},sans-serif;font-size:17px;font-weight:800">{{ a.dist }}</div><div style="font-size:9px;color:{{ t.dim }};letter-spacing:.5px">КМ</div></div>
+          <div style="flex:1;background:{{ t.card2 }};border-radius:11px;padding:9px 6px;text-align:center"><div style="font-family:{{ t.display }},sans-serif;font-size:17px;font-weight:800">{{ a.time }}</div><div style="font-size:9px;color:{{ t.dim }};letter-spacing:.5px">ВРЕМЯ</div></div>
+          <div style="flex:1;background:{{ t.card2 }};border-radius:11px;padding:9px 6px;text-align:center"><div style="font-family:{{ t.display }},sans-serif;font-size:17px;font-weight:800;color:{{ t.accent }}">{{ a.pace }}</div><div style="font-size:9px;color:{{ t.dim }};letter-spacing:.5px">ТЕМП</div></div>
+          <div style="flex:1;background:{{ t.card2 }};border-radius:11px;padding:9px 6px;text-align:center"><div style="font-family:{{ t.display }},sans-serif;font-size:17px;font-weight:800">{{ a.hr }}</div><div style="font-size:9px;color:{{ t.dim }};letter-spacing:.5px">ПУЛЬС</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;padding-top:2px">
+          <div style="display:flex;align-items:center;gap:6px;color:{{ t.dim }};font-size:12px;font-weight:700"><span style="width:16px;height:16px;border:2px solid {{ t.accent }};border-radius:50%;display:inline-block"></span>{{ a.kudos }}</div>
+          <div style="display:flex;align-items:center;gap:6px;color:{{ t.dim }};font-size:12px;font-weight:700"><span style="width:15px;height:12px;border:2px solid {{ t.dim }};border-radius:3px;display:inline-block"></span>{{ a.comN }}</div>
+        </div>
+      </div>
+      </sc-for>
+    </div>
+    </sc-if>
+
+    <!-- ===== HOME / COACH ===== -->
+    <sc-if value="{{ showStudents }}" hint-placeholder-val="{{ false }}">
+    <div key="{{ screen }}" style="animation:scrfade .3s ease;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1;background:{{ t.card }};border:1px solid {{ t.line }};border-radius:16px;padding:14px 12px"><div style="font-family:{{ t.display }},sans-serif;font-size:26px;font-weight:800">5</div><div style="font-size:11px;color:{{ t.dim }}">учеников</div></div>
+        <div style="flex:1;background:{{ t.card }};border:1px solid {{ t.line }};border-radius:16px;padding:14px 12px"><div style="font-family:{{ t.display }},sans-serif;font-size:26px;font-weight:800;color:{{ t.accent }}">3</div><div style="font-size:11px;color:{{ t.dim }}">сегодня</div></div>
+        <div style="flex:1;background:{{ t.card }};border:1px solid {{ t.line }};border-radius:16px;padding:14px 12px"><div style="font-family:{{ t.display }},sans-serif;font-size:26px;font-weight:800">86<span style="font-size:14px">%</span></div><div style="font-size:11px;color:{{ t.dim }}">явка</div></div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onClick="{{ openCreate }}" style="flex:1;border:none;background:{{ t.accent }};color:{{ t.onAccent }};border-radius:14px;padding:14px 10px;font-family:{{ t.font }};font-weight:800;font-size:13px;cursor:pointer">＋ Тренировка</button>
+        <button onClick="{{ openAnnounce }}" style="flex:1;border:1px solid {{ t.accent }};background:{{ t.accentSoft }};color:{{ t.accent }};border-radius:14px;padding:14px 10px;font-family:{{ t.font }};font-weight:800;font-size:13px;cursor:pointer">＋ Анонс</button>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px">
+        <span style="font-family:{{ t.display }},sans-serif;font-size:19px;font-weight:800;text-transform:uppercase;letter-spacing:.4px">Анонсы клуба</span>
+        <span style="font-size:11px;color:{{ t.dim }};font-weight:600">опубликовано</span>
+      </div>
+      <sc-for list="{{ announces }}" as="an" hint-placeholder-count="2">
+      <div style="background:{{ t.card }};border:1px solid {{ t.line }};border-radius:16px;padding:13px 14px;display:flex;align-items:center;gap:13px">
+        <div style="width:4px;height:40px;border-radius:3px;background:{{ t.accent }};flex:none"></div>
+        <div style="flex:1;line-height:1.35;min-width:0"><div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ an.place }}</div><div style="font-size:11px;color:{{ t.dim }}">{{ an.day }} · {{ an.time }} · {{ an.group }}</div></div>
+        <div style="text-align:right;flex:none"><div style="font-family:{{ t.display }},sans-serif;font-size:16px;font-weight:800;color:{{ t.accent }}">{{ an.going }}</div><div style="font-size:10px;color:{{ t.dim }}">идут</div></div>
+      </div>
+      </sc-for>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:2px">
+        <span style="font-family:{{ t.display }},sans-serif;font-size:19px;font-weight:800;text-transform:uppercase;letter-spacing:.4px">Мои ученики</span>
+      </div>
+      <sc-for list="{{ students }}" as="s" hint-placeholder-count="5">
+      <div onClick="{{ goPlan }}" style="cursor:pointer;background:{{ t.card }};border:1px solid {{ t.line }};border-radius:16px;padding:13px 14px;display:flex;align-items:center;gap:13px">
+        <div style="width:46px;height:46px;border-radius:50%;background:{{ t.card2 }};display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:{{ t.accent }};font-family:{{ t.display }},sans-serif;flex:none">{{ s.init }}</div>
+        <div style="flex:1;line-height:1.4;min-width:0"><div style="font-weight:700;font-size:15px">{{ s.name }}</div><div style="font-size:11px;color:{{ t.dim }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.sub }}</div></div>
+        <div style="text-align:right;flex:none"><div style="font-family:{{ t.display }},sans-serif;font-size:16px;font-weight:800;color:{{ s.compCol }}">{{ s.comp }}%</div><div style="font-size:10px;color:{{ t.dim }}">{{ s.km }} км</div></div>
+      </div>
+      </sc-for>
+    </div>
+    </sc-if>
+
+    <!-- ===== PLAN / ATHLETE ===== -->
+    <sc-if value="{{ showPlanView }}" hint-placeholder-val="{{ false }}">
+    <div key="{{ screen }}" style="animation:scrfade .3s ease;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;background:{{ t.card }};border:1px solid {{ t.line }};border-radius:16px;padding:10px 8px">
+        <button onClick="{{ weekPrev }}" style="width:38px;height:38px;border:none;background:{{ t.card2 }};color:{{ t.text }};border-radius:11px;font-size:18px;cursor:pointer">‹</button>
+        <div style="text-align:center;line-height:1.3"><div style="font-weight:700;font-size:14px">{{ weekRange }}</div><div style="font-size:11px;color:{{ t.accent }};font-weight:700">План {{ weekPlan }}</div></div>
+        <button onClick="{{ weekNext }}" style="width:38px;height:38px;border:none;background:{{ t.card2 }};color:{{ t.text }};border-radius:11px;font-size:18px;cursor:pointer">›</button>
+      </div>
+      <button onClick="{{ openCreate }}" style="border:1.5px dashed {{ t.accent }};background:{{ t.accentSoft }};color:{{ t.accent }};border-radius:14px;padding:13px;font-family:{{ t.font }};font-weight:800;font-size:14px;cursor:pointer">＋ Создать свою тренировку</button>
+
+      <sc-if value="{{ hasMine }}" hint-placeholder-val="{{ false }}">
+      <div style="font-size:11px;font-weight:800;color:{{ t.dim }};letter-spacing:.6px;margin-top:2px">МОИ ТРЕНИРОВКИ</div>
+      <sc-for list="{{ myWorkouts }}" as="w" hint-placeholder-count="1">
+      <div style="background:{{ t.card }};border:1px solid {{ t.accent }};border-radius:16px;padding:14px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+          <div style="width:44px;text-align:center;flex:none"><div style="font-family:{{ t.display }},sans-serif;font-size:15px;font-weight:800;color:{{ t.accent }}">{{ w.d }}</div><div style="font-size:9px;color:{{ t.dim }}">своя</div></div>
+          <div style="width:1px;height:34px;background:{{ t.line }};flex:none"></div>
+          <div style="flex:1;line-height:1.35;min-width:0"><div style="font-size:11px;font-weight:700;color:{{ t.accent }};text-transform:uppercase;letter-spacing:.4px">{{ w.tag }}</div><div style="font-weight:700;font-size:14px">{{ w.title }}</div></div>
+          <div style="font-family:{{ t.display }},sans-serif;font-size:15px;font-weight:800;flex:none">{{ w.dur }}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <sc-for list="{{ w.metrics }}" as="mt" hint-placeholder-count="4">
+          <div style="background:{{ t.card2 }};border-radius:10px;padding:7px 10px;text-align:center;min-width:58px"><div style="font-family:{{ t.display }},sans-serif;font-size:14px;font-weight:800;color:{{ t.accent }}">{{ mt.v }}</div><div style="font-size:9px;color:{{ t.dim }};letter-spacing:.3px">{{ mt.l }}</div></div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-for>
+      <div style="font-size:11px;font-weight:800;color:{{ t.dim }};letter-spacing:.6px;margin-top:4px">ПЛАН ТРЕНЕРА</div>
+      </sc-if>
+
+      <sc-for list="{{ days }}" as="d" hint-placeholder-count="7">
+      <div onClick="{{ d.toggle }}" style="cursor:pointer;background:{{ t.card }};border:1px solid {{ d.border }};border-radius:16px;padding:13px 14px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:44px;text-align:center;flex:none"><div style="font-family:{{ t.display }},sans-serif;font-size:15px;font-weight:800;color:{{ d.dayCol }}">{{ d.d }}</div><div style="font-size:10px;color:{{ t.dim }}">{{ d.date }}</div></div>
+          <div style="width:1px;height:34px;background:{{ t.line }};flex:none"></div>
+          <div style="flex:1;line-height:1.35;min-width:0"><div style="font-size:11px;font-weight:700;color:{{ d.tagCol }};text-transform:uppercase;letter-spacing:.4px">{{ d.tag }}</div><div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.title }}</div></div>
+          <div style="text-align:right;flex:none"><div style="font-family:{{ t.display }},sans-serif;font-size:15px;font-weight:800">{{ d.dist }}</div><div style="font-size:11px;color:{{ t.accent }};font-weight:700">{{ d.dur }}</div></div>
+        </div>
+        <sc-if value="{{ d.open }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid {{ t.line }}">
+          <sc-if value="{{ d.hasMetrics }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+            <sc-for list="{{ d.metrics }}" as="mt" hint-placeholder-count="4">
+            <div style="background:{{ t.card2 }};border-radius:10px;padding:7px 10px;text-align:center;min-width:58px"><div style="font-family:{{ t.display }},sans-serif;font-size:14px;font-weight:800;color:{{ t.accent }}">{{ mt.v }}</div><div style="font-size:9px;color:{{ t.dim }};letter-spacing:.3px">{{ mt.l }}</div></div>
+            </sc-for>
+          </div>
+          </sc-if>
+          <div style="font-size:13px;line-height:1.5;color:{{ t.dim }}">{{ d.detail }}</div>
+        </div>
+        </sc-if>
+      </div>
+      </sc-for>
+      <div style="background:{{ t.card2 }};border:1px solid {{ t.line }};border-left:3px solid {{ t.accent }};border-radius:14px;padding:14px">
+        <div style="font-size:11px;font-weight:800;color:{{ t.accent }};letter-spacing:.5px;margin-bottom:6px">КОММЕНТАРИЙ ТРЕНЕРА</div>
+        <div style="font-size:13px;line-height:1.5">Каждый понедельник утром натощак — вес и ИМТ в отчёт. Держим ровный лёгкий темп, не разгоняемся.</div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ===== PLAN / COACH — CONSTRUCTOR ===== -->
+    <sc-if value="{{ showBuilder }}" hint-placeholder-val="{{ false }}">
+    <div key="{{ screen }}" style="animation:scrfade .3s ease;display:flex;flex-direction:column;gap:12px">
+      <div style="background:{{ t.card }};border:1px solid {{ t.line }};border-radius:16px;padding:14px">
+        <div style="font-size:11px;color:{{ t.dim }};font-weight:700;letter-spacing:.5px;margin-bottom:4px">КОНСТРУКТОР · НИКИТА ПОПКОВ</div>
+        <div style="font-family:{{ t.display }},sans-serif;font-size:20px;font-weight:800">Вторник, 21 июля</div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <div style="flex:1;background:{{ t.card2 }};border-radius:11px;padding:9px;text-align:center"><div style="font-family:{{ t.display }},sans-serif;font-size:17px;font-weight:800;color:{{ t.accent }}">{{ segTotal }} км</div><div style="font-size:9px;color:{{ t.dim }}">ОБЪЁМ</div></div>
+          <div style="flex:1;background:{{ t.card2 }};border-radius:11px;padding:9px;text-align:center"><div style="font-family:{{ t.display }},sans-serif;font-size:17px;font-weight:800">{{ segCount }}</div><div style="font-size:9px;color:{{ t.dim }}">СЕГМЕНТОВ</div></div>
+          <div style="flex:1;background:{{ t.card2 }};border-radius:11px;padding:9px;text-align:center"><div style="font-family:{{ t.display }},sans-serif;font-size:17px;font-weight:800">145</div><div style="font-size:9px;color:{{ t.dim }}">ПУЛЬС</div></div>
+        </div>
+      </div>
+      <sc-for list="{{ segList }}" as="g" hint-placeholder-count="3">
+      <div style="background:{{ t.card }};border:1px solid {{ t.line }};border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px">
+        <div style="width:6px;height:44px;border-radius:4px;background:{{ g.col }};flex:none"></div>
+        <div style="flex:1;line-height:1.4;min-width:0"><div style="font-size:11px;font-weight:800;color:{{ g.col }};text-transform:uppercase;letter-spacing:.5px">{{ g.kind }}</div><div style="font-weight:700;font-size:14px">{{ g.title }}</div></div>
+        <div style="text-align:right;flex:none;margin-right:4px"><div style="font-family:{{ t.display }},sans-serif;font-size:15px;font-weight:800">{{ g.dist }} км</div><div style="font-size:11px;color:{{ t.dim }}">{{ g.pace }}</div></div>
+        <button onClick="{{ g.remove }}" style="width:28px;height:28px;border:none;background:{{ t.card2 }};color:{{ t.dim }};border-radius:8px;cursor:pointer;font-size:15px;flex:none">✕</button>
+      </div>
+      </sc-for>
+      <button onClick="{{ addSeg }}" style="border:1.5px dashed {{ t.line }};background:transparent;color:{{ t.dim }};border-radius:14px;padding:13px;font-family:{{ t.font }};font-weight:700;font-size:14px;cursor:pointer">＋ Добавить сегмент</button>
+      <button style="border:none;background:{{ t.accent }};color:{{ t.onAccent }};border-radius:14px;padding:15px;font-family:{{ t.font }};font-weight:800;font-size:15px;cursor:pointer">Назначить ученику</button>
+    </div>
+    </sc-if>
+
+    <!-- ===== PROGRESS / ATHLETE ===== -->
+    <sc-if value="{{ showProgAthlete }}" hint-placeholder-val="{{ false }}">
+    <div key="{{ screen }}" style="animation:scrfade .3s ease;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:6px;background:{{ t.card }};border:1px solid {{ t.line }};border-radius:14px;padding:4px">
+        <button onClick="{{ mVolSet }}" style="flex:1;border:none;cursor:pointer;padding:9px 0;border-radius:10px;font-family:{{ t.font }};font-weight:700;font-size:12px;background:{{ mVolBg }};color:{{ mVolCol }}">Объём</button>
+        <button onClick="{{ mPaceSet }}" style="flex:1;border:none;cursor:pointer;padding:9px 0;border-radius:10px;font-family:{{ t.font }};font-weight:700;font-size:12px;background:{{ mPaceBg }};color:{{ mPaceCol }}">Темп</button>
+        <button onClick="{{ mHrSet }}" style="flex:1;border:none;cursor:pointer;padding:9px 0;border-radius:10px;font-family:{{ t.font }};font-weight:700;font-size:12px;background:{{ mHrBg }};color:{{ mHrCol }}">Пульс</button>
+        <button onClick="{{ mWtSet }}" style="flex:1;border:none;cursor:pointer;padding:9px 0;border-radius:10px;font-family:{{ t.font }};font-weight:700;font-size:12px;background:{{ mWtBg }};color:{{ mWtCol }}">Вес</button>
+      </div>
+      <div style="background:{{ t.card }};border:1px solid {{ t.line }};border-radius:{{ t.radius }};padding:18px">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px">
+          <div style="line-height:1.1"><div style="font-size:12px;color:{{ t.dim }};font-weight:700">{{ metricLabel }}</div><div style="font-family:{{ t.display }},sans-serif;font-size:34px;font-weight:800;color:{{ t.accent }}">{{ metricBig }}</div></div>
+          <div style="text-align:right;line-height:1.2"><div style="font-size:12px;font-weight:800;color:{{ t.good }}">{{ metricDelta }}</div><div style="font-size:11px;color:{{ t.dim }}">за 8 недель</div></div>
+        </div>
+        <sc-if value="{{ mVol }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;height:150px;gap:5px">
+          <sc-for list="{{ volBars }}" as="b" hint-placeholder-count="8">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end">
+            <div style="display:flex;align-items:flex-end;gap:2px;height:130px">
+              <div style="width:7px;background:{{ t.line }};border-radius:3px 3px 0 0;height:{{ b.planH }}px"></div>
+              <div style="width:7px;background:{{ t.accent }};border-radius:3px 3px 0 0;height:{{ b.actH }}px"></div>
+            </div>
+            <span style="font-size:8px;color:{{ t.dim }}">{{ b.label }}</span>
+          </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;gap:16px;justify-content:center;margin-top:12px;font-size:11px;color:{{ t.dim }}">
+          <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:{{ t.line }}"></span>План</span>
+          <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:{{ t.accent }}"></span>Факт</span>
+        </div>
+        </sc-if>
+        <sc-if value="{{ showLine }}" hint-placeholder-val="{{ false }}">
+        <svg viewBox="0 0 300 150" style="width:100%;height:auto;overflow:visible">
+          <path d="{{ lineArea }}" fill="{{ t.accent }}" fill-opacity="0.1"></path>
+          <polyline fill="none" stroke="{{ t.accent }}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" points="{{ linePts }}"></polyline>
+          <circle cx="{{ lineLx }}" cy="{{ lineLy }}" r="5" fill="{{ t.accent }}" stroke="{{ t.bg }}" stroke-width="3"></circle>
+        </svg>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:9px;color:{{ t.dim }}"><span>26.05</span><span>16.06</span><span>07.07</span><span>сейчас</span></div>
+        </sc-if>
+      </div>
+
+      <span style="font-family:{{ t.display }},sans-serif;font-size:19px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-top:4px">Итоги по месяцам</span>
+      <sc-for list="{{ months }}" as="mo" hint-placeholder-count="3">
+      <div style="background:{{ t.card }};border:1px solid {{ t.line }};border-radius:16px;padding:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-weight:800;font-size:15px">{{ mo.m }}</span>
+          <span style="font-family:{{ t.display }},sans-serif;font-size:20px;font-weight:800;color:{{ t.accent }}">{{ mo.km }} км</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;background:{{ t.card2 }};border-radius:10px;padding:8px;text-align:center"><div style="font-weight:800;font-family:{{ t.display }},sans-serif;font-size:15px">{{ mo.tr }}</div><div style="font-size:9px;color:{{ t.dim }}">трен.</div></div>
+          <div style="flex:1;background:{{ t.card2 }};border-radius:10px;padding:8px;text-align:center"><div style="font-weight:800;font-family:{{ t.display }},sans-serif;font-size:15px">{{ mo.pace }}</div><div style="font-size:9px;color:{{ t.dim }}">темп</div></div>
+          <div style="flex:1;background:{{ t.card2 }};border-radius:10px;padding:8px;text-align:center"><div style="font-weight:800;font-family:{{ t.display }},sans-serif;font-size:15px">{{ mo.diff }}</div><div style="font-size:9px;color:{{ t.dim }}">сложн.</div></div>
+        </div>
+      </div>
+      </sc-for>
+      <div style="background:linear-gradient(135deg,{{ t.accent }},{{ t.accent2 }});border-radius:16px;padding:16px;color:{{ t.onAccent }};display:flex;align-items:center;justify-content:space-between">
+        <div><div style="font-size:12px;font-weight:700;opacity:.85">ИТОГО ЗА 2026</div><div style="font-size:12px;opacity:.85">78 тренировок · 3 старта</div></div>
+        <div style="font-family:{{ t.display }},sans-serif;font-size:32px;font-weight:800">612 км</div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ===== PROGRESS / COACH — ANALYTICS ===== -->
+    <sc-if value="{{ showProgCoach }}" hint-placeholder-val="{{ false }}">
+    <div key="{{ screen }}" style="animation:scrfade .3s ease;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:10px">
+        <div style="flex:1;background:{{ t.card }};border:1px solid {{ t.line }};border-radius:16px;padding:14px"><div style="font-family:{{ t.display }},sans-serif;font-size:24px;font-weight:800;color:{{ t.accent }}">1 840</div><div style="font-size:11px;color:{{ t.dim }}">км клуба / мес</div></div>
+        <div style="flex:1;background:{{ t.card }};border:1px solid {{ t.line }};border-radius:16px;padding:14px"><div style="font-family:{{ t.display }},sans-serif;font-size:24px;font-weight:800">86%</div><div style="font-size:11px;color:{{ t.dim }}">средняя явка</div></div>
+      </div>
+      <span style="font-family:{{ t.display }},sans-serif;font-size:19px;font-weight:800;text-transform:uppercase;letter-spacing:.4px">Прогресс учеников</span>
+      <div style="background:{{ t.card }};border:1px solid {{ t.line }};border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px">
+        <sc-for list="{{ students }}" as="s" hint-placeholder-count="5">
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:13px;font-weight:700">{{ s.name }}</span><span style="font-size:12px;font-weight:800;color:{{ s.compCol }};font-family:{{ t.display }},sans-serif">{{ s.comp }}%</span></div>
+          <div style="height:8px;background:{{ t.card2 }};border-radius:5px;overflow:hidden"><div style="height:100%;width:{{ s.comp }}%;background:{{ s.compCol }};border-radius:5px"></div></div>
+        </div>
+        </sc-for>
+      </div>
+      <div style="background:{{ t.card2 }};border:1px solid {{ t.line }};border-left:3px solid {{ t.good }};border-radius:14px;padding:14px">
+        <div style="font-size:11px;font-weight:800;color:{{ t.good }};letter-spacing:.5px;margin-bottom:5px">ЛУЧШИЙ ПРОГРЕСС МЕСЯЦА</div>
+        <div style="font-size:14px;font-weight:700">Мария Соколова · +12% к объёму, темп −0:18/км</div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ===== SCHEDULE (group sessions calendar) ===== -->
+    <sc-if value="{{ isSchedule }}" hint-placeholder-val="{{ false }}">
+    <div key="{{ screen }}" style="animation:scrfade .3s ease;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button onClick="{{ goHome }}" style="width:38px;height:38px;border:none;background:{{ t.card }};border:1px solid {{ t.line }};color:{{ t.text }};border-radius:11px;font-size:18px;cursor:pointer">‹</button>
+        <span style="font-family:{{ t.display }},sans-serif;font-size:19px;font-weight:800;text-transform:uppercase;letter-spacing:.4px">Расписание групп</span>
+      </div>
+
+      <div style="background:{{ t.card }};border:1px solid {{ t.line }};border-radius:{{ t.radius }};padding:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <span style="font-weight:800;font-size:15px">Июль 2026</span>
+          <span style="font-size:11px;color:{{ t.dim }};display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:{{ t.accent }};display:inline-block"></span>тренировка</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">
+          <div style="text-align:center;font-size:10px;color:{{ t.dim }};font-weight:700">Пн</div>
+          <div style="text-align:center;font-size:10px;color:{{ t.dim }};font-weight:700">Вт</div>
+          <div style="text-align:center;font-size:10px;color:{{ t.dim }};font-weight:700">Ср</div>
+          <div style="text-align:center;font-size:10px;color:{{ t.dim }};font-weight:700">Чт</div>
+          <div style="text-align:center;font-size:10px;color:{{ t.dim }};font-weight:700">Пт</div>
+          <div style="text-align:center;font-size:10px;color:{{ t.dim }};font-weight:700">Сб</div>
+          <div style="text-align:center;font-size:10px;color:{{ t.dim }};font-weight:700">Вс</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+          <sc-for list="{{ calCells }}" as="c" hint-placeholder-count="35">
+          <div style="aspect-ratio:1;border-radius:9px;background:{{ c.bg }};display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative">
+            <span style="font-size:12px;font-weight:700;color:{{ c.fg }}">{{ c.n }}</span>
+            <span style="width:5px;height:5px;border-radius:50%;background:{{ c.dot }};position:absolute;bottom:5px"></span>
+          </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <sc-if value="{{ showStudents }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ openAnnounce }}" style="border:1px solid {{ t.accent }};background:{{ t.accentSoft }};color:{{ t.accent }};border-radius:14px;padding:13px;font-family:{{ t.font }};font-weight:800;font-size:14px;cursor:pointer">＋ Опубликовать анонс</button>
+      </sc-if>
+
+      <span style="font-family:{{ t.display }},sans-serif;font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-top:2px">Ближайшие занятия</span>
+      <sc-for list="{{ announces }}" as="an" hint-placeholder-count="2">
+      <div style="background:{{ t.card }};border:1px solid {{ t.line }};border-radius:{{ t.radius }};padding:16px;position:relative;overflow:hidden">
+        <div style="position:absolute;left:0;top:0;bottom:0;width:4px;background:{{ t.accent }}"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:10px;font-weight:800;letter-spacing:.8px;color:{{ t.accent }}">ГРУППОВАЯ · {{ an.group }}</span>
+          <span style="font-size:11px;font-weight:700;color:{{ t.dim }}">идут {{ an.going }}</span>
+        </div>
+        <div style="font-family:{{ t.display }},sans-serif;font-size:19px;font-weight:800;margin-bottom:6px">{{ an.place }}</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <span style="font-size:12px;font-weight:700;background:{{ t.card2 }};padding:5px 10px;border-radius:8px">{{ an.day }}</span>
+          <span style="font-size:12px;font-weight:700;background:{{ t.card2 }};padding:5px 10px;border-radius:8px;color:{{ t.accent }}">старт {{ an.time }}</span>
+        </div>
+        <div style="font-size:13px;line-height:1.45;color:{{ t.dim }};margin-bottom:14px">{{ an.note }}</div>
+        <button style="width:100%;border:none;background:{{ t.accent }};color:{{ t.onAccent }};border-radius:11px;padding:12px;font-family:{{ t.font }};font-weight:800;font-size:13px;cursor:pointer">{{ scheduleCta }}</button>
+      </div>
+      </sc-for>
+    </div>
+    </sc-if>
+
+    <!-- ===== RACES + PR ===== -->
+    <sc-if value="{{ isRaces }}" hint-placeholder-val="{{ false }}">
+    <div key="{{ screen }}" style="animation:scrfade .3s ease;display:flex;flex-direction:column;gap:14px">
+      <span style="font-family:{{ t.display }},sans-serif;font-size:19px;font-weight:800;text-transform:uppercase;letter-spacing:.4px">Личные рекорды</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <sc-for list="{{ prs }}" as="p" hint-placeholder-count="6">
+        <div style="background:{{ t.card }};border:1px solid {{ t.line }};border-radius:16px;padding:14px">
+          <div style="font-size:12px;color:{{ t.dim }};font-weight:700">{{ p.d }}</div>
+          <div style="font-family:{{ t.display }},sans-serif;font-size:26px;font-weight:800;color:{{ p.col }};margin:2px 0 3px">{{ p.t }}</div>
+          <div style="font-size:10px;color:{{ t.dim }}">{{ p.date }}</div>
+        </div>
+        </sc-for>
+      </div>
+      <span style="font-family:{{ t.display }},sans-serif;font-size:19px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-top:4px">{{ racesTitle }}</span>
+      <sc-for list="{{ starts }}" as="r" hint-placeholder-count="4">
+      <div style="background:{{ t.card }};border:1px solid {{ t.line }};border-radius:16px;padding:14px;display:flex;align-items:center;gap:14px">
+        <div style="width:52px;text-align:center;flex:none;background:{{ t.card2 }};border-radius:12px;padding:8px 4px"><div style="font-family:{{ t.display }},sans-serif;font-size:22px;font-weight:800;color:{{ t.accent }}">{{ r.days }}</div><div style="font-size:9px;color:{{ t.dim }}">дней</div></div>
+        <div style="flex:1;line-height:1.4;min-width:0"><div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div><div style="font-size:11px;color:{{ t.dim }}">{{ r.date }} · {{ r.dist }}</div></div>
+        <div style="font-size:11px;font-weight:700;color:{{ t.accent }};background:{{ t.accentSoft }};padding:5px 9px;border-radius:20px;flex:none">{{ r.goal }}</div>
+      </div>
+      </sc-for>
+      <div style="background:{{ t.card2 }};border:1px solid {{ t.line }};border-radius:16px;padding:14px;display:flex;align-items:center;gap:14px;opacity:.85">
+        <div style="width:52px;text-align:center;flex:none"><div style="font-family:{{ t.display }},sans-serif;font-size:14px;font-weight:800;color:{{ t.good }}">✓</div><div style="font-size:9px;color:{{ t.dim }}">финиш</div></div>
+        <div style="flex:1;line-height:1.4"><div style="font-weight:700;font-size:14px">Весенний полумарафон</div><div style="font-size:11px;color:{{ t.dim }}">12 апр 2026 · 21.1 км</div></div>
+        <div style="font-family:{{ t.display }},sans-serif;font-weight:800;font-size:15px">2:29:40</div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ===== PROFILE / ATHLETE ===== -->
+    <sc-if value="{{ showProfileAthlete }}" hint-placeholder-val="{{ false }}">
+    <div key="{{ screen }}" style="animation:scrfade .3s ease;display:flex;flex-direction:column;gap:14px">
+      <div style="background:{{ t.card }};border:1px solid {{ t.line }};border-radius:{{ t.radius }};padding:20px;display:flex;flex-direction:column;align-items:center;text-align:center">
+        <div style="width:74px;height:74px;border-radius:50%;background:{{ t.card2 }};border:2px solid {{ t.accent }};display:flex;align-items:center;justify-content:center;font-family:{{ t.display }},sans-serif;font-weight:800;font-size:26px;color:{{ t.accent }}">НП</div>
+        <div style="font-family:{{ t.display }},sans-serif;font-size:22px;font-weight:800;margin-top:12px">Никита Попков</div>
+        <div style="font-size:12px;color:{{ t.dim }};margin-top:3px">26 лет · Москва · любитель</div>
+        <div style="display:flex;gap:22px;margin-top:16px">
+          <div style="text-align:center"><div style="font-family:{{ t.display }},sans-serif;font-size:20px;font-weight:800">612</div><div style="font-size:10px;color:{{ t.dim }}">км</div></div>
+          <div style="text-align:center"><div style="font-family:{{ t.display }},sans-serif;font-size:20px;font-weight:800">78</div><div style="font-size:10px;color:{{ t.dim }}">трен.</div></div>
+          <div style="text-align:center"><div style="font-family:{{ t.display }},sans-serif;font-size:20px;font-weight:800">3</div><div style="font-size:10px;color:{{ t.dim }}">старта</div></div>
+        </div>
+      </div>
+      <div style="background:{{ t.card }};border:1px solid {{ t.line }};border-radius:16px;padding:15px;display:flex;align-items:center;gap:13px">
+        <div style="width:40px;height:40px;border-radius:11px;background:{{ t.card2 }};display:flex;align-items:center;justify-content:center;flex:none"><span style="width:20px;height:20px;border:2px solid {{ t.accent }};border-radius:50%;display:block"></span></div>
+        <div style="flex:1;line-height:1.35"><div style="font-weight:700;font-size:14px">Garmin Forerunner 265</div><div style="font-size:11px;color:{{ t.good }}">Подключено · синхр. 2 ч назад</div></div>
+        <div style="width:44px;height:26px;border-radius:20px;background:{{ t.accent }};position:relative;flex:none"><span style="position:absolute;right:3px;top:3px;width:20px;height:20px;border-radius:50%;background:{{ t.onAccent }}"></span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:1px;background:{{ t.line }};border-radius:16px;overflow:hidden;border:1px solid {{ t.line }}">
+        <div style="background:{{ t.card }};padding:15px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:14px;font-weight:600">Текущий вес</span><span style="font-weight:800;font-family:{{ t.display }},sans-serif;font-size:15px">97.6 кг <span style="color:{{ t.good }};font-size:12px">−4.4</span></span></div>
+        <div style="background:{{ t.card }};padding:15px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:14px;font-weight:600">Абонемент</span><span style="font-size:12px;font-weight:700;color:{{ t.good }}">Оплачен до 31.07</span></div>
+        <div style="background:{{ t.card }};padding:15px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:14px;font-weight:600">Тренер</span><span style="font-size:12px;color:{{ t.dim }}">Беговой клуб · гр. «Зина»</span></div>
+      </div>
+    </div>
+    </sc-if>
+
+    <!-- ===== PROFILE / COACH — with CLUB PALETTE ===== -->
+    <sc-if value="{{ showProfileCoach }}" hint-placeholder-val="{{ false }}">
+    <div key="{{ screen }}" style="animation:scrfade .3s ease;display:flex;flex-direction:column;gap:14px">
+      <div style="background:{{ t.card }};border:1px solid {{ t.line }};border-radius:{{ t.radius }};padding:20px;display:flex;flex-direction:column;align-items:center;text-align:center">
+        <div style="width:74px;height:74px;border-radius:50%;background:{{ t.card2 }};border:2px solid {{ t.accent }};display:flex;align-items:center;justify-content:center;font-family:{{ t.display }},sans-serif;font-weight:800;font-size:26px;color:{{ t.accent }}">ТР</div>
+        <div style="font-family:{{ t.display }},sans-serif;font-size:22px;font-weight:800;margin-top:12px">Главный тренер</div>
+        <div style="font-size:12px;color:{{ t.dim }};margin-top:3px">Клуб «{{ t.name }}» · 5 учеников</div>
+      </div>
+
+      <div style="background:{{ t.card }};border:1px solid {{ t.line }};border-radius:{{ t.radius }};padding:18px">
+        <div style="font-family:{{ t.display }},sans-serif;font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:.4px">Палитра клуба</div>
+        <div style="font-size:12px;color:{{ t.dim }};margin:6px 0 16px;line-height:1.45">Акцентный цвет применяется ко всем участникам клуба — и в кабинете тренера, и у спортсменов.</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <sc-for list="{{ palette }}" as="c" hint-placeholder-count="6">
+          <button onClick="{{ c.set }}" style="width:46px;height:46px;border-radius:14px;cursor:pointer;background:{{ c.hex }};border:3px solid {{ c.ring }};display:flex;align-items:center;justify-content:center;color:{{ c.check }};font-weight:900;font-size:18px">{{ c.mark }}</button>
+          </sc-for>
+        </div>
+        <div style="margin-top:16px;display:flex;align-items:center;gap:10px;background:{{ t.card2 }};border-radius:12px;padding:12px">
+          <span style="width:34px;height:34px;border-radius:9px;background:{{ t.accent }};flex:none"></span>
+          <div style="flex:1;line-height:1.3"><div style="font-size:13px;font-weight:700">Текущий акцент клуба</div><div style="font-size:11px;color:{{ t.dim }}">Обновится у всех при сохранении</div></div>
+          <span style="font-size:11px;font-weight:800;color:{{ t.accent }}">АКТИВЕН</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:1px;background:{{ t.line }};border-radius:16px;overflow:hidden;border:1px solid {{ t.line }}">
+        <div style="background:{{ t.card }};padding:15px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:14px;font-weight:600">Расписание групп</span><span style="font-size:12px;color:{{ t.dim }}">Зина · ЛЭМЗ</span></div>
+        <div style="background:{{ t.card }};padding:15px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:14px;font-weight:600">Оплаты учеников</span><span style="font-size:12px;font-weight:700;color:{{ t.good }}">4 из 5 оплачено</span></div>
+        <div style="background:{{ t.card }};padding:15px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:14px;font-weight:600">Приглашения в клуб</span><span style="font-size:12px;color:{{ t.accent }};font-weight:700">Пригласить →</span></div>
+      </div>
+    </div>
+    </sc-if>
+
+  </div>
+
+  <!-- CREATE WORKOUT SHEET -->
+  <sc-if value="{{ createOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;z-index:20">
+    <div style="width:100%;background:{{ t.bg }};border-top:1px solid {{ t.line }};border-radius:28px 28px 46px 46px;padding:20px 20px 28px;animation:sheetup .28s ease;max-height:86%;overflow-y:auto" class="scrl">
+      <div style="width:40px;height:4px;border-radius:2px;background:{{ t.line }};margin:0 auto 16px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <span style="font-family:{{ t.display }},sans-serif;font-size:20px;font-weight:800">Новая тренировка</span>
+        <button onClick="{{ closeCreate }}" style="width:32px;height:32px;border:none;background:{{ t.card2 }};color:{{ t.dim }};border-radius:10px;cursor:pointer;font-size:15px">✕</button>
+      </div>
+
+      <div style="font-size:11px;font-weight:800;color:{{ t.dim }};letter-spacing:.6px;margin-bottom:8px">ТИП</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+        <sc-for list="{{ wTypes }}" as="ty" hint-placeholder-count="5">
+        <button onClick="{{ ty.set }}" style="border:1px solid {{ ty.bd }};background:{{ ty.bg }};color:{{ ty.fg }};border-radius:20px;padding:8px 14px;font-family:{{ t.font }};font-weight:700;font-size:13px;cursor:pointer">{{ ty.name }}</button>
+        </sc-for>
+      </div>
+
+      <!-- INTERVAL params -->
+      <sc-if value="{{ wIsInterval }}" hint-placeholder-val="{{ false }}">
+      <div style="font-size:11px;font-weight:800;color:{{ t.dim }};letter-spacing:.6px;margin-bottom:8px">ОТРЕЗКИ</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:{{ t.card }};border:1px solid {{ t.line }};border-radius:14px;padding:10px 12px;margin-bottom:14px">
+        <button onClick="{{ decReps }}" style="width:42px;height:42px;border:none;background:{{ t.card2 }};color:{{ t.text }};border-radius:11px;cursor:pointer;font-size:22px">−</button>
+        <div style="text-align:center"><span style="font-family:{{ t.display }},sans-serif;font-size:28px;font-weight:800">{{ wReps }}</span><span style="font-size:14px;color:{{ t.dim }};font-weight:700"> × {{ wRepDist }}</span></div>
+        <button onClick="{{ incReps }}" style="width:42px;height:42px;border:none;background:{{ t.accent }};color:{{ t.onAccent }};border-radius:11px;cursor:pointer;font-size:22px">＋</button>
+      </div>
+      <div style="font-size:11px;font-weight:800;color:{{ t.dim }};letter-spacing:.6px;margin-bottom:8px">ДЛИНА ОТРЕЗКА</div>
+      <div style="display:flex;gap:6px;margin-bottom:14px">
+        <sc-for list="{{ wRepDists }}" as="rd" hint-placeholder-count="4">
+        <button onClick="{{ rd.set }}" style="flex:1;border:1px solid {{ rd.bd }};background:{{ rd.bg }};color:{{ rd.fg }};border-radius:10px;padding:10px 0;font-family:{{ t.font }};font-weight:700;font-size:12px;cursor:pointer">{{ rd.name }}</button>
+        </sc-for>
+      </div>
+      <div style="font-size:11px;font-weight:800;color:{{ t.dim }};letter-spacing:.6px;margin-bottom:8px">ОТДЫХ МЕЖДУ</div>
+      <div style="display:flex;gap:6px;margin-bottom:14px">
+        <sc-for list="{{ wRests }}" as="rs" hint-placeholder-count="4">
+        <button onClick="{{ rs.set }}" style="flex:1;border:1px solid {{ rs.bd }};background:{{ rs.bg }};color:{{ rs.fg }};border-radius:10px;padding:10px 0;font-family:{{ t.font }};font-weight:700;font-size:12px;cursor:pointer">{{ rs.name }}</button>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:18px">
+        <div style="flex:1;background:{{ t.card2 }};border-radius:11px;padding:11px;text-align:center"><div style="font-family:{{ t.display }},sans-serif;font-size:17px;font-weight:800;color:{{ t.accent }}">{{ cfgPace }}</div><div style="font-size:9px;color:{{ t.dim }}">РАБ. ТЕМП</div></div>
+        <div style="flex:1;background:{{ t.card2 }};border-radius:11px;padding:11px;text-align:center"><div style="font-family:{{ t.display }},sans-serif;font-size:17px;font-weight:800">{{ cfgHr }}</div><div style="font-size:9px;color:{{ t.dim }}">ПУЛЬС</div></div>
+      </div>
+      </sc-if>
+
+      <!-- DISTANCE-based params (easy / long / tempo) -->
+      <sc-if value="{{ wShowDist }}" hint-placeholder-val="{{ true }}">
+      <div style="font-size:11px;font-weight:800;color:{{ t.dim }};letter-spacing:.6px;margin-bottom:8px">{{ distLabel }}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:{{ t.card }};border:1px solid {{ t.line }};border-radius:14px;padding:10px 12px;margin-bottom:14px">
+        <button onClick="{{ decDist }}" style="width:42px;height:42px;border:none;background:{{ t.card2 }};color:{{ t.text }};border-radius:11px;cursor:pointer;font-size:22px">−</button>
+        <div style="text-align:center"><span style="font-family:{{ t.display }},sans-serif;font-size:28px;font-weight:800">{{ wDist }}</span><span style="font-size:14px;color:{{ t.dim }};font-weight:700"> км</span></div>
+        <button onClick="{{ incDist }}" style="width:42px;height:42px;border:none;background:{{ t.accent }};color:{{ t.onAccent }};border-radius:11px;cursor:pointer;font-size:22px">＋</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:18px">
+        <div style="flex:1;background:{{ t.card2 }};border-radius:11px;padding:11px;text-align:center"><div style="font-family:{{ t.display }},sans-serif;font-size:17px;font-weight:800;color:{{ t.accent }}">{{ cfgPace }}</div><div style="font-size:9px;color:{{ t.dim }}">{{ paceLabel }}</div></div>
+        <div style="flex:1;background:{{ t.card2 }};border-radius:11px;padding:11px;text-align:center"><div style="font-family:{{ t.display }},sans-serif;font-size:17px;font-weight:800">{{ cfgHr }}</div><div style="font-size:9px;color:{{ t.dim }}">ПУЛЬС</div></div>
+      </div>
+      </sc-if>
+
+      <div style="font-size:11px;font-weight:800;color:{{ t.dim }};letter-spacing:.6px;margin-bottom:8px">ДЕНЬ</div>
+      <div style="display:flex;gap:6px;margin-bottom:18px">
+        <sc-for list="{{ wDays }}" as="dy" hint-placeholder-count="7">
+        <button onClick="{{ dy.set }}" style="flex:1;border:1px solid {{ dy.bd }};background:{{ dy.bg }};color:{{ dy.fg }};border-radius:10px;padding:10px 0;font-family:{{ t.font }};font-weight:700;font-size:12px;cursor:pointer">{{ dy.name }}</button>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;background:{{ t.accentSoft }};border:1px solid {{ t.accent }};border-radius:12px;padding:14px;margin-bottom:18px">
+        <span style="font-size:13px;font-weight:700">Расчётное время</span>
+        <span style="font-family:{{ t.display }},sans-serif;font-size:22px;font-weight:800;color:{{ t.accent }}">{{ estTime }}</span>
+      </div>
+
+      <button onClick="{{ saveWorkout }}" style="width:100%;border:none;background:{{ t.accent }};color:{{ t.onAccent }};border-radius:14px;padding:16px;font-family:{{ t.font }};font-weight:800;font-size:15px;cursor:pointer">{{ saveLabel }}</button>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ANNOUNCE SHEET -->
+  <sc-if value="{{ announceOpen }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;z-index:20">
+    <div style="width:100%;background:{{ t.bg }};border-top:1px solid {{ t.line }};border-radius:28px 28px 46px 46px;padding:20px 20px 28px;animation:sheetup .28s ease;max-height:86%;overflow-y:auto" class="scrl">
+      <div style="width:40px;height:4px;border-radius:2px;background:{{ t.line }};margin:0 auto 16px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <span style="font-family:{{ t.display }},sans-serif;font-size:20px;font-weight:800">Анонс групповой</span>
+        <button onClick="{{ closeAnnounce }}" style="width:32px;height:32px;border:none;background:{{ t.card2 }};color:{{ t.dim }};border-radius:10px;cursor:pointer;font-size:15px">✕</button>
+      </div>
+
+      <div style="font-size:11px;font-weight:800;color:{{ t.dim }};letter-spacing:.6px;margin-bottom:8px">МЕСТО</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+        <sc-for list="{{ aPlaces }}" as="pl" hint-placeholder-count="3">
+        <button onClick="{{ pl.set }}" style="border:1px solid {{ pl.bd }};background:{{ pl.bg }};color:{{ pl.fg }};border-radius:20px;padding:8px 14px;font-family:{{ t.font }};font-weight:700;font-size:13px;cursor:pointer">{{ pl.name }}</button>
+        </sc-for>
+      </div>
+
+      <div style="font-size:11px;font-weight:800;color:{{ t.dim }};letter-spacing:.6px;margin-bottom:8px">ДЕНЬ</div>
+      <div style="display:flex;gap:6px;margin-bottom:18px">
+        <sc-for list="{{ aDays }}" as="dy" hint-placeholder-count="7">
+        <button onClick="{{ dy.set }}" style="flex:1;border:1px solid {{ dy.bd }};background:{{ dy.bg }};color:{{ dy.fg }};border-radius:10px;padding:10px 0;font-family:{{ t.font }};font-weight:700;font-size:12px;cursor:pointer">{{ dy.name }}</button>
+        </sc-for>
+      </div>
+
+      <div style="font-size:11px;font-weight:800;color:{{ t.dim }};letter-spacing:.6px;margin-bottom:8px">ВРЕМЯ</div>
+      <div style="display:flex;gap:8px;margin-bottom:18px">
+        <sc-for list="{{ aTimes }}" as="tm" hint-placeholder-count="3">
+        <button onClick="{{ tm.set }}" style="flex:1;border:1px solid {{ tm.bd }};background:{{ tm.bg }};color:{{ tm.fg }};border-radius:11px;padding:11px 0;font-family:{{ t.font }};font-weight:700;font-size:13px;cursor:pointer">{{ tm.name }}</button>
+        </sc-for>
+      </div>
+
+      <div style="font-size:11px;font-weight:800;color:{{ t.dim }};letter-spacing:.6px;margin-bottom:8px">ГРУППА</div>
+      <div style="display:flex;gap:8px;margin-bottom:22px">
+        <sc-for list="{{ aGroups }}" as="gr" hint-placeholder-count="2">
+        <button onClick="{{ gr.set }}" style="flex:1;border:1px solid {{ gr.bd }};background:{{ gr.bg }};color:{{ gr.fg }};border-radius:11px;padding:11px 0;font-family:{{ t.font }};font-weight:700;font-size:13px;cursor:pointer">{{ gr.name }}</button>
+        </sc-for>
+      </div>
+
+      <button onClick="{{ publishAnnounce }}" style="width:100%;border:none;background:{{ t.accent }};color:{{ t.onAccent }};border-radius:14px;padding:16px;font-family:{{ t.font }};font-weight:800;font-size:15px;cursor:pointer">Опубликовать для учеников</button>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- bottom nav -->
+  <div style="flex:none;display:flex;background:{{ t.card }};border-top:1px solid {{ t.line }};padding:10px 8px 22px">
+    <button onClick="{{ goHome }}" style="flex:1;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;color:{{ homeCol }}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 9.5V20h14V9.5"></path></svg>
+      <span style="font-size:10px;font-weight:700">{{ tabHome }}</span>
+    </button>
+    <button onClick="{{ goPlan }}" style="flex:1;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;color:{{ planCol }}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"></rect><path d="M3 9h18M8 3v3M16 3v3"></path></svg>
+      <span style="font-size:10px;font-weight:700">{{ tabPlan }}</span>
+    </button>
+    <button onClick="{{ goProg }}" style="flex:1;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;color:{{ progCol }}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg>
+      <span style="font-size:10px;font-weight:700">{{ tabProg }}</span>
+    </button>
+    <button onClick="{{ goRaces }}" style="flex:1;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;color:{{ raceCol }}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"></circle><path d="M8.5 13.5 7 22l5-3 5 3-1.5-8.5"></path></svg>
+      <span style="font-size:10px;font-weight:700">Старты</span>
+    </button>
+    <button onClick="{{ goProfile }}" style="flex:1;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;color:{{ profCol }}">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6"></path></svg>
+      <span style="font-size:10px;font-weight:700">{{ tabProfile }}</span>
+    </button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844},&quot;theme&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;}}">
+class Component extends DCLogic {
+  state = {
+    authed:false, authView:'login', inClub:true, clubCode:'',
+    screen:'home', role:'athlete', metric:'vol', week:1, openDay:'Вт',
+    accent:null, createOpen:false, myWorkouts:[],
+    segs:null, wType:'Лёгкий', wDist:6, wDay:'Ср',
+    announceOpen:false, aPlace:'Стадион «Зина»', aDay:'Вт', aTime:'19:50', aGroup:'Основная',
+    wReps:6, wRepDist:'600 м', wRest:'300 м',
+    students:[
+      { init:'НП', name:'Никита Попков', sub:'След.: Вт · Стадион «Зина»', km:'24.6', comp:88 },
+      { init:'МС', name:'Мария Соколова', sub:'След.: Ср · Темповая 6 км', km:'38.2', comp:95 },
+      { init:'АВ', name:'Артём Волков', sub:'След.: Чт · Интервалы 5×800', km:'52.0', comp:72 },
+      { init:'ДК', name:'Дарья Ким', sub:'Сегодня · Длительный 18 км', km:'41.5', comp:90 },
+      { init:'ЕЛ', name:'Егор Лебедев', sub:'Отдых · восстановление', km:'29.8', comp:64 },
+    ],
+    announces:[
+      { place:'Стадион «Зина»', day:'Вт, 21 июля', time:'19:50', group:'Основная группа', note:'ОФП + темповая работа. Приходите на разминку к 19:30.', going:8 },
+      { place:'ЛЭМЗ', day:'Чт, 23 июля', time:'19:50', group:'Основная группа', note:'Интервалы 5×800 м через 400 м трусцой. Форма по погоде.', going:6 },
+    ]
+  };
+
+  renderVals(){
+    const s = this.state;
+    const dft = { name:'PULSE', font:'Manrope', display:'Archivo', radius:'20px',
+      bg:'#0c0e10', card:'#16191d', card2:'#1e2228', line:'#2a2f36', text:'#f4f6f7',
+      dim:'#9aa2ab', faint:'#5c636c', accent:'#ff5c22', good:'#39d98a' };
+    const base = Object.assign({}, dft, this.props.theme || {});
+
+    // ---- club accent (coach-controlled) ----
+    const hx = h => { h=h.replace('#',''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; };
+    const accHex = s.accent || base.accent;
+    const [ar,ag,ab] = hx(accHex);
+    const lum = (0.299*ar + 0.587*ag + 0.114*ab)/255;
+    const onAccent = lum > 0.6 ? '#0a0b0c' : '#ffffff';
+    const li = c => Math.round(c + (255-c)*0.25);
+    const t = Object.assign({}, base, {
+      accent: accHex,
+      accent2: `rgb(${li(ar)},${li(ag)},${li(ab)})`,
+      accentSoft: `rgba(${ar},${ag},${ab},.15)`,
+      onAccent
+    });
+
+    const isCoach = s.role === 'coach';
+    const scr = s.screen;
+
+    // ---- data ----
+    const feed = [
+      { title:'Вечерний кросс', when:'сегодня, 20:14', dist:'8.2', time:'1:00:14', pace:'7:20', hr:'143', kudos:12, comN:3,
+        route:'M18 104 C 60 40, 96 128, 148 74 S 224 34, 284 92', sx:18, sy:104, ex:284, ey:92 },
+      { title:'Групповая · ЛЭМЗ', when:'вчера, 19:48', dist:'6.1', time:'46:30', pace:'7:38', hr:'151', kudos:9, comN:2,
+        route:'M28 30 C 84 82, 58 122, 132 100 S 214 122, 272 44', sx:28, sy:30, ex:272, ey:44 },
+      { title:'Восстановительный бег', when:'2 дня назад', dist:'6.0', time:'47:12', pace:'7:52', hr:'138', kudos:6, comN:1,
+        route:'M24 98 C 72 58, 122 112, 162 60 C 202 20, 244 84, 278 50', sx:24, sy:98, ex:278, ey:50 },
+    ];
+    const students = s.students.map((x,i)=>({ ...x,
+      compCol: x.comp>=85 ? t.good : x.comp>=70 ? t.text : t.accent,
+      remove: ()=>this.setState(st=>({ students: st.students.filter((_,j)=>j!==i) })) }));
+
+    const weeks = [
+      { range:'13.07 – 19.07', plan:'25 км' },
+      { range:'20.07 – 26.07', plan:'27–28 км' },
+      { range:'27.07 – 02.08', plan:'30 км' },
+      { range:'03.08 – 09.08', plan:'33 км' },
+    ];
+    const wk = weeks[s.week] || weeks[1];
+
+    const rawDays = [
+      { d:'Пн', date:'20.07', tag:'Восстановление', kind:'recovery', title:'Зарядка + лёгкий бег', dist:'5 км', dur:'~35 мин', status:'done',
+        metrics:[{v:'5 км',l:'дист.'},{v:'~35′',l:'время'},{v:'своб.',l:'темп'}],
+        detail:'Утром зарядка, лёгкий бег 30 мин произвольно. Разминка. КОР 10–15 мин дома.' },
+      { d:'Вт', date:'21.07', tag:'Интервалы', kind:'intervals', title:'Стадион «Зина» · отрезки', dist:'8 км', dur:'~1:05', status:'today',
+        metrics:[{v:'6×600 м',l:'отрезки'},{v:'4:45',l:'раб. темп'},{v:'300 м',l:'отдых'},{v:'зона 4',l:'пульс'}],
+        detail:'Разминка 3 км по 7:30. Основная: 6×600 м по 4:45 через 300 м трусцой. Заминка 1 км. К 19:50 начинаем с группой.' },
+      { d:'Ср', date:'22.07', tag:'Кросс', kind:'cross', title:'Восстановительный кросс', dist:'6 км', dur:'~46 мин', status:'plan',
+        metrics:[{v:'6 км',l:'дист.'},{v:'~46′',l:'время'},{v:'7:45',l:'темп'},{v:'до 140',l:'пульс'}],
+        detail:'Очень лёгкий, никуда не торопимся. Средний пульс до 140.' },
+      { d:'Чт', date:'23.07', tag:'Темповая', kind:'tempo', title:'ЛЭМЗ · темповый бег', dist:'7 км', dur:'~50 мин', status:'plan',
+        metrics:[{v:'3 км',l:'темпо'},{v:'6:20',l:'темп'},{v:'порог 168',l:'пульс'},{v:'~50′',l:'время'}],
+        detail:'Разминка 2 км по 7:30. Темповый отрезок 3 км по 6:20 (на пороге). Заминка 2 км легко.' },
+      { d:'Пт', date:'24.07', tag:'Отдых', kind:'rest', title:'Восстановление', dist:'—', dur:'—', status:'plan',
+        metrics:[], detail:'МФР-ролл, растяжка, сауна, массаж. Без бега.' },
+      { d:'Сб', date:'25.07', tag:'Длительный', kind:'long', title:'Длительный кросс', dist:'8 км', dur:'~1:00', status:'plan',
+        metrics:[{v:'8 км',l:'дист.'},{v:'~1:00',l:'время'},{v:'7:25',l:'темп'},{v:'до 150',l:'пульс'}],
+        detail:'Держим ровный темп, средний пульс до 150. Восстановление после: ролл, растяжка.' },
+      { d:'Вс', date:'26.07', tag:'Отдых', kind:'rest', title:'Полный отдых', dist:'—', dur:'—', status:'plan',
+        metrics:[], detail:'Отдых и восстановление. Вес утром натощак в отчёт.' },
+    ];
+    const days = rawDays.map(d=>{
+      const hard = d.kind==='intervals' || d.kind==='tempo';
+      const col = d.status==='done'? t.good : d.status==='today'? t.accent : t.dim;
+      return { ...d, open: s.openDay===d.d, hasMetrics: d.metrics.length>0,
+        toggle: ()=>this.setState(st=>({ openDay: st.openDay===d.d ? null : d.d })),
+        dayCol: col,
+        tagCol: d.status==='done'? t.good : (hard || d.status==='today') ? t.accent : t.dim,
+        border: (d.status==='today') ? t.accent : t.line };
+    });
+
+    // ---- constructor segments (coach) ----
+    const segCols = [t.good, t.accent, '#4a9eff', '#c08bff'];
+    const defSegs = [
+      { kind:'Разминка', title:'Лёгкий бег + суставная', dist:2, pace:'7:40' },
+      { kind:'Основная · ОФП', title:'Круговая с группой', dist:5, pace:'смеш.' },
+      { kind:'Заминка', title:'Лёгкий бег + растяжка', dist:1, pace:'8:00' },
+    ];
+    const segState = s.segs || defSegs;
+    const segList = segState.map((g,i)=>({
+      ...g, col: segCols[i % segCols.length],
+      remove: ()=>this.setState(st=>{ const arr=(st.segs||defSegs).slice(); arr.splice(i,1); return { segs: arr }; })
+    }));
+    const segAddPool = [
+      { kind:'Интервалы', title:'5×800 м через 400 м трусцой', dist:4, pace:'4:30' },
+      { kind:'Темповый', title:'Ровный темповый отрезок', dist:5, pace:'6:20' },
+      { kind:'Фартлек', title:'Ускорения по самочувствию', dist:6, pace:'смеш.' },
+      { kind:'Заминка', title:'Лёгкий бег + растяжка', dist:1, pace:'8:00' },
+    ];
+    const segTotal = segState.reduce((a,g)=>a+g.dist,0);
+
+    // ---- charts ----
+    const line = (vals,min,max)=>{
+      const w=300,h=150,pad=12;
+      const pts = vals.map((v,i)=>{
+        const x = pad + (w-2*pad)*i/(vals.length-1);
+        const y = pad + (h-2*pad)*(1-(v-min)/(max-min));
+        return [x,y];
+      });
+      const p = pts.map(a=>a[0].toFixed(1)+','+a[1].toFixed(1)).join(' ');
+      const area = 'M '+pts.map(a=>a[0].toFixed(1)+' '+a[1].toFixed(1)).join(' L ')
+        +' L '+pts[pts.length-1][0].toFixed(1)+' '+(h-pad)+' L '+pts[0][0].toFixed(1)+' '+(h-pad)+' Z';
+      const last = pts[pts.length-1];
+      return { p, area, lx:last[0].toFixed(1), ly:last[1].toFixed(1) };
+    };
+    const volPlan=[22,24,25,27,28,30,33,25], volAct=[21,23,26,25,29,28,32,25], maxV=34;
+    const volBars = ['26/5','2/6','9/6','16/6','23/6','30/6','7/7','14/7'].map((label,i)=>({
+      label, planH: Math.round(volPlan[i]/maxV*130), actH: Math.round(volAct[i]/maxV*130)
+    }));
+    const paceDisp=[455,448,442,438,435,430,428,425].map(v=>2*440-v);
+    const hrVals=[148,146,145,147,144,143,142,143];
+    const wtVals=[102,101.2,100.5,99.8,99,98.6,98.1,97.6];
+    const m = s.metric;
+    let lineData=null, metricLabel='', metricBig='', metricDelta='';
+    if(m==='pace'){ lineData=line(paceDisp,405,455); metricLabel='Средний темп'; metricBig='7:05'; metricDelta='−0:30 /км'; }
+    else if(m==='hr'){ lineData=line(hrVals.map(v=>310-v),150,175); metricLabel='Пульс трен.'; metricBig='143'; metricDelta='−5 уд/мин'; }
+    else if(m==='wt'){ lineData=line(wtVals.map(v=>210-v),107,110); metricLabel='Вес'; metricBig='97.6'; metricDelta='−4.4 кг'; }
+    else { metricLabel='Объём этой недели'; metricBig='24.6'; metricDelta='+11 км'; }
+
+    const months = [
+      { m:'Июль', km:108, tr:18, pace:'7:20', diff:'6.4' },
+      { m:'Июнь', km:96, tr:16, pace:'7:28', diff:'6.1' },
+      { m:'Май', km:88, tr:15, pace:'7:35', diff:'5.8' },
+    ];
+
+    const prs = [
+      { d:'1 км', t:'5:38', date:'мар 2026' },{ d:'3 км', t:'18:55', date:'фев 2026' },
+      { d:'5 км', t:'32:40', date:'апр 2026' },{ d:'10 км', t:'1:08:12', date:'май 2026' },
+      { d:'21.1 км', t:'2:29:40', date:'апр 2026' },{ d:'42.2 км', t:'—', date:'дебют осенью', pending:true },
+    ].map(p=>({ ...p, col: p.pending ? t.dim : t.text }));
+    const starts = [
+      { days:'10', name:'Забег «Белые ночи»', date:'19 июл 2026', dist:'10 км', goal:'Цель 1:06' },
+      { days:'66', name:'Осенний гром 21K', date:'13 сен 2026', dist:'21.1 км', goal:'Цель 2:20' },
+      { days:'73', name:'Московский марафон', date:'20 сен 2026', dist:'42.2 км', goal:'Дебют' },
+      { days:'94', name:'Забег.РФ Москва', date:'11 окт 2026', dist:'10 км', goal:'Цель 1:02' },
+    ];
+
+    // ---- palette control ----
+    const palOpts = ['#ff5c22','#c8ff34','#4a9eff','#ff3d81','#22d3c5','#ffd23f'];
+    const palette = palOpts.map(hex=>{
+      const sel = accHex.toLowerCase()===hex.toLowerCase();
+      const [r,g,b]=hx(hex); const l=(0.299*r+0.587*g+0.114*b)/255;
+      return { hex, ring: sel ? t.text : 'transparent', mark: sel ? '✓' : '',
+        check: l>0.6 ? '#0a0b0c' : '#ffffff',
+        set: ()=>this.setState({ accent: hex }) };
+    });
+
+    // ---- create workout sheet (type-aware) ----
+    const chip = (name, key, cur) => ({ name, set:()=>this.setState({ [key]:name }),
+      bg: cur===name ? t.accent:'transparent', fg: cur===name ? t.onAccent:t.dim, bd: cur===name ? t.accent:t.line });
+    const typeCfg = {
+      'Лёгкий':     { mode:'dist',     pace:'7:40', hr:'до 145' },
+      'Восстанов.': { mode:'dist',     pace:'7:50', hr:'до 140' },
+      'Длительный': { mode:'dist',     pace:'7:20', hr:'до 150' },
+      'Темпо':      { mode:'tempo',    pace:'6:20', hr:'порог 168' },
+      'Интервалы':  { mode:'interval', pace:'4:45', hr:'зона 4' },
+    };
+    const cfg = typeCfg[s.wType] || typeCfg['Лёгкий'];
+    const wTypes = Object.keys(typeCfg).map(name=>chip(name,'wType',s.wType));
+    const wDays = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(name=>chip(name,'wDay',s.wDay));
+    const wRepDists = ['400 м','600 м','800 м','1000 м'].map(name=>chip(name,'wRepDist',s.wRepDist));
+    const wRests = ['200 м','300 м','400 м','90 сек'].map(name=>chip(name,'wRest',s.wRest));
+
+    const p2s = p => { const a=p.split(':'); return (+a[0])*60 + (+(a[1]||0)); };
+    let estMin;
+    if(cfg.mode==='interval'){
+      const repKm = parseInt(s.wRepDist)/1000;
+      estMin = Math.round(s.wReps*repKm*(p2s(cfg.pace)/60) + (s.wReps-1)*1.5 + 22);
+    } else if(cfg.mode==='tempo'){
+      estMin = Math.round(s.wDist*(p2s(cfg.pace)/60) + 16);
+    } else {
+      estMin = Math.round(s.wDist*(p2s(cfg.pace)/60));
+    }
+    const estTime = estMin>=60 ? Math.floor(estMin/60)+':'+String(estMin%60).padStart(2,'0') : '~'+estMin+' мин';
+
+    const saveWorkout = ()=>this.setState(st=>{
+      const c = typeCfg[st.wType] || typeCfg['Лёгкий'];
+      let metrics, title;
+      if(c.mode==='interval'){
+        title='Интервалы · своя';
+        metrics=[{v:st.wReps+'×'+st.wRepDist,l:'отрезки'},{v:c.pace,l:'раб. темп'},{v:st.wRest,l:'отдых'},{v:estTime,l:'время'}];
+      } else if(c.mode==='tempo'){
+        title='Темповый бег · своя';
+        metrics=[{v:st.wDist+' км',l:'темпо'},{v:c.pace,l:'темп'},{v:c.hr,l:'пульс'},{v:estTime,l:'время'}];
+      } else {
+        title=st.wType+' · своя';
+        metrics=[{v:st.wDist+' км',l:'дист.'},{v:c.pace,l:'темп'},{v:c.hr,l:'пульс'},{v:estTime,l:'время'}];
+      }
+      return { createOpen:false,
+        myWorkouts:[{ d:st.wDay, tag:st.wType, title, dur:estTime, metrics }, ...st.myWorkouts] };
+    });
+
+    // ---- announcements ----
+    const monthDate = { 'Пн':'20 июля','Вт':'21 июля','Ср':'22 июля','Чт':'23 июля','Пт':'24 июля','Сб':'25 июля','Вс':'26 июля' };
+    const aPlaces = ['Стадион «Зина»','ЛЭМЗ','Парк Победы'].map(name=>{
+      const sel=s.aPlace===name; return { name, set:()=>this.setState({aPlace:name}),
+        bg:sel?t.accent:'transparent', fg:sel?t.onAccent:t.dim, bd:sel?t.accent:t.line };
+    });
+    const aTimes = ['19:00','19:50','20:00'].map(name=>{
+      const sel=s.aTime===name; return { name, set:()=>this.setState({aTime:name}),
+        bg:sel?t.accent:'transparent', fg:sel?t.onAccent:t.dim, bd:sel?t.accent:t.line };
+    });
+    const aGroups = ['Основная','Начинающие'].map(name=>{
+      const sel=s.aGroup===name; return { name, set:()=>this.setState({aGroup:name}),
+        bg:sel?t.accent:'transparent', fg:sel?t.onAccent:t.dim, bd:sel?t.accent:t.line };
+    });
+    const aDays = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(name=>{
+      const sel=s.aDay===name; return { name, set:()=>this.setState({aDay:name}),
+        bg:sel?t.accent:'transparent', fg:sel?t.onAccent:t.dim, bd:sel?t.accent:t.line };
+    });
+    const publishAnnounce = ()=>this.setState(st=>({
+      announceOpen:false,
+      announces:[{ place:st.aPlace, day:st.aDay+', '+monthDate[st.aDay], time:st.aTime,
+        group:st.aGroup+' группа', note:'Групповая тренировка. Приходите на разминку заранее.', going:0 }, ...st.announces]
+    }));
+
+    // ---- schedule calendar (July 2026) ----
+    const sessionDays = [2,7,9,14,16,21,23,28,30];
+    const today = 9;
+    const first = new Date(2026,6,1);
+    const startDow = (first.getDay()+6)%7;
+    const calCells = [];
+    for(let i=0;i<startDow;i++) calCells.push({ blank:true, key:'b'+i, n:'', bg:'transparent', fg:t.dim, dot:'transparent' });
+    for(let d=1; d<=31; d++){
+      const has = sessionDays.includes(d);
+      calCells.push({ blank:false, key:'d'+d, n:d, has,
+        isToday: d===today,
+        bg: d===today ? t.accent : (has ? t.accentSoft : 'transparent'),
+        fg: d===today ? t.onAccent : t.text,
+        dot: has && d!==today ? t.accent : 'transparent' });
+    }
+
+    // ---- nav / toggles ----
+    const navCol = id => scr===id ? t.accent : t.faint;
+    const mBg = k => s.metric===k ? t.accent : 'transparent';
+    const mFg = k => s.metric===k ? t.onAccent : t.dim;
+    const setScreen = id => this.setState({ screen:id });
+
+    return {
+      t, screen:scr,
+
+      // auth
+      authed: s.authed, notAuthed: !s.authed,
+      isLogin: s.authView==='login', isRegister: s.authView==='register',
+      authTitle: s.authView==='login' ? 'Вход в аккаунт' : 'Регистрация',
+      authBtn: s.authView==='login' ? 'Войти' : 'Создать аккаунт',
+      showLoginTab: ()=>this.setState({ authView:'login' }),
+      showRegisterTab: ()=>this.setState({ authView:'register' }),
+      loginBg: s.authView==='login' ? t.accent:'transparent', loginFg: s.authView==='login' ? t.onAccent:t.dim,
+      regBg: s.authView==='register' ? t.accent:'transparent', regFg: s.authView==='register' ? t.onAccent:t.dim,
+      pickAthlete: ()=>this.setState({ role:'athlete' }), pickCoach: ()=>this.setState({ role:'coach' }),
+      pAthBg: !isCoach ? t.accent:'transparent', pAthFg: !isCoach ? t.onAccent:t.dim,
+      pCoachBg: isCoach ? t.accent:'transparent', pCoachFg: isCoach ? t.onAccent:t.dim,
+      doLogin: ()=>this.setState({ authed:true, screen:'home' }),
+      logout: ()=>this.setState({ authed:false, authView:'login' }),
+
+      // club membership
+      inClub: s.inClub,
+      clubCode: s.clubCode,
+      onClubCode: e=>this.setState({ clubCode: e.target.value }),
+      joinClub: ()=>this.setState({ inClub:true, clubCode:'' }),
+      leaveClub: ()=>this.setState({ inClub:false, screen:'home' }),
+      inviteCode: 'PULSE-7K42',
+
+      // schedule
+      calCells, nextSession: (s.announces[0]||{}),
+      goSchedule: ()=>this.setState({ screen:'schedule' }),
+      isSchedule: scr==='schedule',
+
+      avatarInit: isCoach ? 'ТР' : 'НП',
+      cabinetTitle: isCoach ? 'Кабинет тренера' : 'Личный кабинет',
+
+      setAthlete: ()=>this.setState({ role:'athlete', screen:'home', createOpen:false, announceOpen:false }),
+      setCoach: ()=>this.setState({ role:'coach', screen:'home', createOpen:false, announceOpen:false }),
+      athBg: !isCoach ? t.accent : 'transparent', athCol: !isCoach ? t.onAccent : t.dim,
+      coachBg: isCoach ? t.accent : 'transparent', coachCol: isCoach ? t.onAccent : t.dim,
+
+      showFeed: scr==='home' && !isCoach,
+      showStudents: scr==='home' && isCoach,
+      showPlanView: scr==='plan' && !isCoach,
+      showBuilder: scr==='plan' && isCoach,
+      showProgAthlete: scr==='prog' && !isCoach,
+      showProgCoach: scr==='prog' && isCoach,
+      isRaces: scr==='races',
+      showProfileAthlete: scr==='profile' && !isCoach,
+      showProfileCoach: scr==='profile' && isCoach,
+      racesTitle: isCoach ? 'Старты клуба' : 'Календарь стартов',
+
+      feed, students, days, prs, starts, months,
+      weekRange: wk.range, weekPlan: wk.plan,
+      weekPrev: ()=>this.setState(st=>({ week: Math.max(0, st.week-1) })),
+      weekNext: ()=>this.setState(st=>({ week: Math.min(weeks.length-1, st.week+1) })),
+
+      myWorkouts: s.myWorkouts, hasMine: s.myWorkouts.length>0,
+
+      segList, segTotal, segCount: segState.length,
+      addSeg: ()=>this.setState(st=>{ const cur=st.segs||defSegs; return { segs:[...cur, segAddPool[cur.length % segAddPool.length]] }; }),
+
+      metric:m, mVol:m==='vol', showLine:m!=='vol',
+      metricLabel, metricBig, metricDelta, volBars,
+      linePts:lineData?lineData.p:'', lineArea:lineData?lineData.area:'',
+      lineLx:lineData?lineData.lx:0, lineLy:lineData?lineData.ly:0,
+      mVolSet:()=>this.setState({metric:'vol'}), mPaceSet:()=>this.setState({metric:'pace'}),
+      mHrSet:()=>this.setState({metric:'hr'}), mWtSet:()=>this.setState({metric:'wt'}),
+      mVolBg:mBg('vol'), mVolCol:mFg('vol'), mPaceBg:mBg('pace'), mPaceCol:mFg('pace'),
+      mHrBg:mBg('hr'), mHrCol:mFg('hr'), mWtBg:mBg('wt'), mWtCol:mFg('wt'),
+
+      palette,
+
+      createOpen: s.createOpen,
+      openCreate: ()=>this.setState({ createOpen:true }),
+      closeCreate: ()=>this.setState({ createOpen:false }),
+      wTypes, wDays, wDist:s.wDist, estTime,
+      wMode: cfg.mode, wIsInterval: cfg.mode==='interval', wIsTempo: cfg.mode==='tempo', wIsDist: cfg.mode==='dist',
+      wShowDist: cfg.mode!=='interval',
+      distLabel: cfg.mode==='tempo' ? 'ТЕМПОВОЙ ОТРЕЗОК' : 'ДИСТАНЦИЯ',
+      paceLabel: cfg.mode==='tempo' ? 'ТЕМП' : 'ТЕМП',
+      cfgPace: cfg.pace, cfgHr: cfg.hr,
+      wReps: s.wReps, wRepDist: s.wRepDist, wRest: s.wRest, wRepDists, wRests,
+      incReps: ()=>this.setState(st=>({ wReps: Math.min(12, st.wReps+1) })),
+      decReps: ()=>this.setState(st=>({ wReps: Math.max(2, st.wReps-1) })),
+      incDist: ()=>this.setState(st=>({ wDist: Math.min(42, st.wDist+1) })),
+      decDist: ()=>this.setState(st=>({ wDist: Math.max(1, st.wDist-1) })),
+      saveWorkout, saveLabel: isCoach ? 'Сохранить и назначить' : 'Добавить в план',
+
+      announces: s.announces, hasAnnounce: s.announces.length>0,
+      announceOpen: s.announceOpen,
+      openAnnounce: ()=>this.setState({ announceOpen:true }),
+      closeAnnounce: ()=>this.setState({ announceOpen:false }),
+      aPlaces, aTimes, aGroups, aDays, publishAnnounce,
+
+      ringC:326.7, ringO:(326.7*(1-24.6/28)).toFixed(1),
+
+      goHome:()=>setScreen('home'), goPlan:()=>setScreen('plan'), goProg:()=>setScreen('prog'),
+      goRaces:()=>setScreen('races'), goProfile:()=>setScreen('profile'),
+      homeCol:navCol('home'), planCol:navCol('plan'), progCol:navCol('prog'),
+      raceCol:navCol('races'), profCol:navCol('profile'),
+      tabHome: isCoach ? 'Ученики' : 'Главная',
+      tabPlan: isCoach ? 'Конструктор' : 'План',
+      tabProg: isCoach ? 'Аналитика' : 'Прогресс',
+      tabProfile: isCoach ? 'Клуб' : 'Профиль',
+    };
+  }
+}
+</script>
+</body>
+</html>
