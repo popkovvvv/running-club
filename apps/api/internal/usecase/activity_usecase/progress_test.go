@@ -16,7 +16,14 @@ import (
 func TestProgress(t *testing.T) {
 	t.Parallel()
 	uid := uuid.New()
-	months := []model.MonthStat{model.NewMonthStat("Июл", 120, 12, "5:30", "+10")}
+	months := []model.MonthStat{
+		model.NewMonthStat("Июн", 100, 10, "5:30", "+10"),
+		model.NewMonthStat("Июл", 50, 5, "5:45", "+5"),
+	}
+	races := []*model.Race{
+		model.NewRace(uid, "Забег 1", "01.06", "10", "1:00", 0),
+		model.NewRace(uid, "Забег 2", "01.07", "10", "1:00", 0),
+	}
 
 	tests := []struct {
 		name    string
@@ -27,6 +34,7 @@ func TestProgress(t *testing.T) {
 			name: "ok",
 			before: func(m usecaseMocks) {
 				m.activityRepo.EXPECT().FindMonthStats(mock.Anything, uid).Return(months, nil).Once()
+				m.activityRepo.EXPECT().FindRaces(mock.Anything, uid).Return(races, nil).Once()
 			},
 		},
 		{
@@ -51,9 +59,12 @@ func TestProgress(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
-			require.Equal(t, 612.0, res.YearKm)
-			require.Len(t, res.Months, 1)
-			require.Equal(t, "Июл", res.Months[0].M)
+			require.Equal(t, 150.0, res.YearKm)
+			require.Equal(t, 15, res.YearTr)
+			require.Equal(t, 2, res.YearStarts)
+			require.Len(t, res.Months, 2)
+			require.Equal(t, "Июн", res.Months[0].M)
+			require.Equal(t, "Июл", res.Months[1].M)
 		})
 	}
 }
