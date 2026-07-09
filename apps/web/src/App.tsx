@@ -1,5 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { AuthGate } from './components/AuthGate'
+import { BottomNav } from './components/BottomNav'
 import { CreateClubGate } from './components/CreateClubGate'
 import { RoleEntry } from './components/RoleEntry'
 import { api, type Activity } from './lib/api'
@@ -14,6 +15,13 @@ import { RacesScreen } from './screens/RacesScreen'
 import { ScheduleScreen } from './screens/ScheduleScreen'
 
 type AuthRole = 'athlete' | 'coach'
+
+function initials(name?: string, isCoach?: boolean) {
+  if (!name?.trim()) return isCoach ? 'ТР' : '—'
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+  return parts[0].slice(0, 2).toUpperCase()
+}
 
 export default function App() {
   const { user, loading, theme, screen, setScreen } = useApp()
@@ -61,7 +69,12 @@ export default function App() {
             <div style={{ fontSize: 10, color: theme.dim, fontWeight: 700, letterSpacing: 1 }}>КЛУБ «{theme.name}»</div>
             <div style={{ fontFamily: theme.display, fontSize: 22, fontWeight: 800 }}>{isCoach ? 'Кабинет тренера' : 'Личный кабинет'}</div>
           </div>
-          <div style={{ width: 42, height: 42, borderRadius: '50%', background: theme.card2, border: `1.5px solid ${theme.accent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.accent, fontWeight: 800 }}>{isCoach ? 'ТР' : 'НП'}</div>
+          <div
+            style={{ width: 42, height: 42, borderRadius: '50%', background: theme.card2, border: `1.5px solid ${theme.accent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.accent, fontWeight: 800 }}
+            onClick={() => setScreen('profile')}
+          >
+            {initials(user.name, isCoach)}
+          </div>
         </div>
       </div>
       <div className="scrl" style={{ flex: 1, overflowY: 'auto', padding: '2px 16px 96px' }}>
@@ -72,14 +85,7 @@ export default function App() {
         {screen === 'races' && <RacesScreen />}
         {screen === 'profile' && (isCoach ? <ProfileCoach /> : <ProfileAthlete />)}
       </div>
-      <nav className="nav" data-testid="bottom-nav">
-        <button data-testid="nav-home" className={screen === 'home' ? 'active' : ''} onClick={() => setScreen('home')}>{isCoach ? 'Ученики' : 'Главная'}</button>
-        <button data-testid="nav-schedule" className={screen === 'schedule' ? 'active' : ''} onClick={() => setScreen('schedule')}>Расписание</button>
-        <button data-testid="nav-plan" className={screen === 'plan' ? 'active' : ''} onClick={() => setScreen('plan')}>{isCoach ? 'Конструктор' : 'План'}</button>
-        <button data-testid="nav-prog" className={screen === 'prog' ? 'active' : ''} onClick={() => setScreen('prog')}>{isCoach ? 'Аналитика' : 'Прогресс'}</button>
-        <button data-testid="nav-races" className={screen === 'races' ? 'active' : ''} onClick={() => setScreen('races')}>Старты</button>
-        <button data-testid="nav-profile" className={screen === 'profile' ? 'active' : ''} onClick={() => setScreen('profile')}>{isCoach ? 'Клуб' : 'Профиль'}</button>
-      </nav>
+      <BottomNav />
     </div>
   )
 }
