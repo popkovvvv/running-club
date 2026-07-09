@@ -15,6 +15,7 @@ type (
 	}
 
 	clubRepo interface {
+		Create(ctx context.Context, c *model.Club) error
 		GetByID(ctx context.Context, id uuid.UUID) (*model.Club, error)
 		GetByInviteCode(ctx context.Context, code string) (*model.Club, error)
 		GetByCoachID(ctx context.Context, coachID uuid.UUID) (*model.Club, error)

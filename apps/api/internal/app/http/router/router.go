@@ -50,6 +50,7 @@ func New(h Handlers) http.Handler {
 			priv.Get("/auth/me", h.Auth.Me)
 			priv.Post("/auth/logout", h.Auth.Logout)
 
+			priv.Post("/clubs", h.Club.Create)
 			priv.Get("/club", h.Club.Get)
 			priv.Post("/club/join", h.Club.Join)
 			priv.Post("/club/leave", h.Club.Leave)

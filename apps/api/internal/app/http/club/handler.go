@@ -13,6 +13,7 @@ import (
 )
 
 type useCase interface {
+	Create(ctx context.Context, coachID uuid.UUID, req dto.CreateClubRequest) (*dto.ClubView, error)
 	GetClub(ctx context.Context, userID uuid.UUID, role string) (*dto.ClubView, error)
 	Join(ctx context.Context, userID uuid.UUID, code string) (*dto.ClubView, error)
 	Leave(ctx context.Context, userID uuid.UUID) error
@@ -27,6 +28,24 @@ type Handler struct {
 
 func NewHandler(uc useCase) *Handler {
 	return &Handler{uc: uc}
+}
+
+func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
+	if middleware.Role(r.Context()) != string(model.RoleCoach) {
+		response.Error(w, model.ErrForbidden)
+		return
+	}
+	var req dto.CreateClubRequest
+	if err := response.Decode(r, &req); err != nil {
+		response.JSON(w, http.StatusBadRequest, response.ErrorBody{Error: err.Error(), Code: "bad_request"})
+		return
+	}
+	res, err := h.uc.Create(r.Context(), middleware.UserID(r.Context()), req)
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+	response.JSON(w, http.StatusOK, res)
 }
 
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
