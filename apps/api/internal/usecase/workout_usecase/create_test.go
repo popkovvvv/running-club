@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nikpopkov/running-club/api/internal/domain/dto"
+	"github.com/nikpopkov/running-club/api/internal/domain/model"
 	"github.com/nikpopkov/running-club/api/internal/usecase/workout_usecase"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -28,6 +29,7 @@ func TestCreate(t *testing.T) {
 			req:  dto.CreateWorkoutRequest{Kind: "own", DayLabel: "Ср", Tag: "Лёгкий", Title: "Кросс", DistKm: 6, Duration: "~46 мин", Pace: "7:40"},
 			want: 6,
 			before: func(m usecaseMocks) {
+				m.membershipRepo.EXPECT().GetActiveByUser(mock.Anything, uid).Return(nil, model.ErrNotFound).Once()
 				m.workoutRepo.EXPECT().Create(mock.Anything, mock.AnythingOfType("*model.Workout")).Return(nil).Once()
 			},
 		},
@@ -40,6 +42,7 @@ func TestCreate(t *testing.T) {
 			}},
 			want: 8,
 			before: func(m usecaseMocks) {
+				m.membershipRepo.EXPECT().GetActiveByUser(mock.Anything, uid).Return(nil, model.ErrNotFound).Once()
 				m.workoutRepo.EXPECT().Create(mock.Anything, mock.AnythingOfType("*model.Workout")).Return(nil).Once()
 			},
 		},
@@ -51,8 +54,8 @@ func TestCreate(t *testing.T) {
 			if tt.before != nil {
 				tt.before(m)
 			}
-			uc := workout_usecase.NewUseCase(m.workoutRepo, m.planWeekRepo, m.membershipRepo)
-			view, err := uc.Create(context.Background(), uid, tt.req)
+			uc := workout_usecase.NewUseCase(m.workoutRepo, m.planWeekRepo, m.membershipRepo, m.clubRepo)
+			view, err := uc.Create(context.Background(), uid, model.RoleAthlete, tt.req)
 			require.NoError(t, err)
 			require.InDelta(t, tt.want, view.DistKm, 0.01)
 		})
@@ -62,6 +65,6 @@ func TestCreate(t *testing.T) {
 func TestSegmentTotal(t *testing.T) {
 	t.Parallel()
 	m := newMocks(t)
-	uc := workout_usecase.NewUseCase(m.workoutRepo, m.planWeekRepo, m.membershipRepo)
+	uc := workout_usecase.NewUseCase(m.workoutRepo, m.planWeekRepo, m.membershipRepo, m.clubRepo)
 	require.Equal(t, 8.0, uc.SegmentTotal([]dto.SegmentInput{{DistKm: 2}, {DistKm: 5}, {DistKm: 1}}))
 }

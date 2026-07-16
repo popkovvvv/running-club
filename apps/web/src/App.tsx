@@ -6,6 +6,8 @@ import { RoleEntry } from './components/RoleEntry'
 import { api, type Activity } from './lib/api'
 import { useApp } from './lib/store'
 import { themeToCssVars } from './lib/theme'
+import { ActivityDetailScreen } from './screens/ActivityDetailScreen'
+import { CoachPlanScreen } from './screens/CoachPlanScreen'
 import { HomeAthlete } from './screens/HomeAthlete'
 import { HomeCoach } from './screens/HomeCoach'
 import { PlanScreen } from './screens/PlanScreen'
@@ -13,6 +15,8 @@ import { ProfileAthlete, ProfileCoach } from './screens/ProfileScreen'
 import { ProgressScreen } from './screens/ProgressScreen'
 import { RacesScreen } from './screens/RacesScreen'
 import { ScheduleScreen } from './screens/ScheduleScreen'
+import { StudentProfileScreen } from './screens/StudentProfileScreen'
+import { WorkoutDetailScreen } from './screens/WorkoutDetailScreen'
 
 type AuthRole = 'athlete' | 'coach'
 
@@ -24,7 +28,7 @@ function initials(name?: string, isCoach?: boolean) {
 }
 
 export default function App() {
-  const { user, loading, theme, screen, setScreen } = useApp()
+  const { user, loading, theme, screen, overlay, setScreen } = useApp()
   const [authRole, setAuthRole] = useState<AuthRole | null>(null)
   const [activities, setActivities] = useState<Activity[]>([])
   const isCoach = user?.role === 'coach'
@@ -57,6 +61,23 @@ export default function App() {
     )
   }
 
+  const mainContent = overlay ? (
+    <>
+      {overlay.type === 'activity' && <ActivityDetailScreen id={overlay.id} />}
+      {overlay.type === 'workout' && <WorkoutDetailScreen id={overlay.id} />}
+      {overlay.type === 'student' && <StudentProfileScreen id={overlay.id} />}
+    </>
+  ) : (
+    <>
+      {screen === 'home' && (isCoach ? <HomeCoach /> : <HomeAthlete activities={activities} />)}
+      {screen === 'schedule' && <ScheduleScreen />}
+      {screen === 'plan' && (isCoach ? <CoachPlanScreen /> : <PlanScreen />)}
+      {screen === 'prog' && <ProgressScreen />}
+      {screen === 'races' && <RacesScreen />}
+      {screen === 'profile' && (isCoach ? <ProfileCoach /> : <ProfileAthlete />)}
+    </>
+  )
+
   return (
     <div className="phone" style={vars} data-testid="phone-app">
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 26px 6px', fontSize: 14, fontWeight: 700 }}>
@@ -78,14 +99,9 @@ export default function App() {
         </div>
       </div>
       <div className="scrl" style={{ flex: 1, overflowY: 'auto', padding: '2px 16px 96px' }}>
-        {screen === 'home' && (isCoach ? <HomeCoach /> : <HomeAthlete activities={activities} />)}
-        {screen === 'schedule' && <ScheduleScreen />}
-        {screen === 'plan' && <PlanScreen />}
-        {screen === 'prog' && <ProgressScreen />}
-        {screen === 'races' && <RacesScreen />}
-        {screen === 'profile' && (isCoach ? <ProfileCoach /> : <ProfileAthlete />)}
+        {mainContent}
       </div>
-      <BottomNav />
+      {!overlay && <BottomNav />}
     </div>
   )
 }

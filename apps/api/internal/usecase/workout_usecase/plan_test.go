@@ -129,7 +129,7 @@ func TestPlan(t *testing.T) {
 			if tt.before != nil {
 				tt.before(m)
 			}
-			uc := workout_usecase.NewUseCase(m.workoutRepo, m.planWeekRepo, m.membershipRepo)
+			uc := workout_usecase.NewUseCase(m.workoutRepo, m.planWeekRepo, m.membershipRepo, m.clubRepo)
 			res, err := uc.Plan(context.Background(), uid, tt.week)
 			require.NoError(t, err)
 			require.Equal(t, tt.wantWeek, res.WeekIndex)

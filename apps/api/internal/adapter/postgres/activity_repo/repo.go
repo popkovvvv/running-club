@@ -273,6 +273,35 @@ func scanActivity(row scannable) (*model.Activity, error) {
 	return &activity, nil
 }
 
+func (r *Repo) GetByID(ctx context.Context, id uuid.UUID) (*model.Activity, error) {
+	row := r.pool.QueryRow(ctx, `
+		SELECT id, user_id, source, external_id, sport_type, title, when_label, dist_km, distance_meters,
+			duration, pace, moving_seconds, elapsed_seconds, hr, average_heartrate, max_heartrate,
+			elevation_gain, kudos, comments, visibility, polyline, route_svg, start_x, start_y,
+			end_x, end_y, started_at, created_at, updated_at
+		FROM activities WHERE id=$1`, id)
+	activity, err := scanActivity(row)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, model.ErrNotFound
+		}
+		return nil, fmt.Errorf("scanActivity: %w", err)
+	}
+	return activity, nil
+}
+
+func (r *Repo) SumDistByUserSince(ctx context.Context, userID uuid.UUID, since time.Time) (float64, error) {
+	var sum float64
+	err := r.pool.QueryRow(ctx, `
+		SELECT COALESCE(SUM(dist_km), 0) FROM activities
+		WHERE user_id=$1 AND COALESCE(started_at, created_at) >= $2`,
+		userID, since).Scan(&sum)
+	if err != nil {
+		return 0, fmt.Errorf("QueryRow: %w", err)
+	}
+	return sum, nil
+}
+
 func (r *Repo) GetByUserSourceExternalID(ctx context.Context, userID uuid.UUID, source, externalID string) (*model.Activity, error) {
 	row := r.pool.QueryRow(ctx, `
 		SELECT id, user_id, source, external_id, sport_type, title, when_label, dist_km, distance_meters,

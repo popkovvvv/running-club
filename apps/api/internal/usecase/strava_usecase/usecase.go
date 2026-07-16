@@ -2,7 +2,6 @@ package strava_usecase
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"math"
 	"net/url"
@@ -13,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/nikpopkov/running-club/api/internal/domain/dto"
 	"github.com/nikpopkov/running-club/api/internal/domain/model"
+	"github.com/nikpopkov/running-club/api/internal/pkg/polyline"
 )
 
 type Config struct {
@@ -307,10 +307,10 @@ func mapSummaryToActivity(userID uuid.UUID, summary ActivitySummary) *model.Acti
 		Visibility:       summary.Visibility,
 		Polyline:         summary.Map.SummaryPolyline,
 		RouteSVG:         routeSVG(summary.Map.SummaryPolyline),
-		StartX:           0,
-		StartY:           0,
-		EndX:             0,
-		EndY:             0,
+		StartX:           routeStartX(summary.Map.SummaryPolyline),
+		StartY:           routeStartY(summary.Map.SummaryPolyline),
+		EndX:             routeEndX(summary.Map.SummaryPolyline),
+		EndY:             routeEndY(summary.Map.SummaryPolyline),
 		StartedAt:        &startedAt,
 		CreatedAt:        time.Now().UTC(),
 		UpdatedAt:        time.Now().UTC(),
@@ -331,14 +331,23 @@ func formatPace(distanceMeters float64, movingSeconds int) string {
 	return fmt.Sprintf("%d:%02d", secondsPerKm/60, secondsPerKm%60)
 }
 
-func routeSVG(polyline string) string {
-	if strings.TrimSpace(polyline) == "" {
-		return ""
-	}
-	raw, err := json.Marshal([][]float64{{20, 20}, {150, 70}, {280, 110}})
-	if err != nil {
-		return ""
-	}
-	_ = raw
-	return "M20 20 L150 70 L280 110"
+func routeSVG(encoded string) string {
+	svg := polyline.ToSVG(encoded, 300, 140)
+	return svg.Path
+}
+
+func routeStartX(encoded string) float64 {
+	return polyline.ToSVG(encoded, 300, 140).SX
+}
+
+func routeStartY(encoded string) float64 {
+	return polyline.ToSVG(encoded, 300, 140).SY
+}
+
+func routeEndX(encoded string) float64 {
+	return polyline.ToSVG(encoded, 300, 140).EX
+}
+
+func routeEndY(encoded string) float64 {
+	return polyline.ToSVG(encoded, 300, 140).EY
 }

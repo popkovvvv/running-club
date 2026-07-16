@@ -15,20 +15,27 @@ const (
 )
 
 type Workout struct {
-	ID        uuid.UUID
-	ClubID    *uuid.UUID
-	UserID    uuid.UUID
-	Kind      WorkoutKind
-	DayLabel  string
-	Tag       string
-	Title     string
-	DistKm    float64
-	Duration  string
-	Pace      string
-	HR        string
-	WeekIndex int
-	CreatedAt time.Time
-	Segments  []Segment
+	ID                  uuid.UUID
+	ClubID              *uuid.UUID
+	UserID              uuid.UUID
+	Kind                WorkoutKind
+	WorkoutType         WorkoutType
+	DayLabel            string
+	Tag                 string
+	Title               string
+	Description         string
+	DistKm              float64
+	Duration            string
+	Pace                string
+	HR                  string
+	WeekIndex           int
+	ScheduledDate       *time.Time
+	Status              WorkoutStatus
+	CompletedActivityID *uuid.UUID
+	AssignedBy          *uuid.UUID
+	IsClubTemplate      bool
+	CreatedAt           time.Time
+	Segments            []Segment
 }
 
 func NewWorkout(
@@ -40,18 +47,20 @@ func NewWorkout(
 	weekIndex int,
 ) *Workout {
 	return &Workout{
-		ID:        uuid.New(),
-		UserID:    userID,
-		Kind:      kind,
-		DayLabel:  dayLabel,
-		Tag:       tag,
-		Title:     title,
-		DistKm:    distKm,
-		Duration:  duration,
-		Pace:      pace,
-		HR:        hr,
-		WeekIndex: weekIndex,
-		CreatedAt: time.Now().UTC(),
+		ID:          uuid.New(),
+		UserID:      userID,
+		Kind:        kind,
+		WorkoutType: WorkoutTypeEasy,
+		DayLabel:    dayLabel,
+		Tag:         tag,
+		Title:       title,
+		DistKm:      distKm,
+		Duration:    duration,
+		Pace:        pace,
+		HR:          hr,
+		WeekIndex:   weekIndex,
+		Status:      WorkoutStatusPlanned,
+		CreatedAt:   time.Now().UTC(),
 	}
 }
 

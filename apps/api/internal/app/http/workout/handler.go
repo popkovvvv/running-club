@@ -10,11 +10,14 @@ import (
 	"github.com/nikpopkov/running-club/api/internal/app/http/middleware"
 	"github.com/nikpopkov/running-club/api/internal/app/http/response"
 	"github.com/nikpopkov/running-club/api/internal/domain/dto"
+	"github.com/nikpopkov/running-club/api/internal/domain/model"
 )
 
 type useCase interface {
 	Plan(ctx context.Context, userID uuid.UUID, week int) (*dto.PlanResponse, error)
-	Create(ctx context.Context, userID uuid.UUID, req dto.CreateWorkoutRequest) (*dto.WorkoutView, error)
+	Create(ctx context.Context, actorID uuid.UUID, role model.Role, req dto.CreateWorkoutRequest) (*dto.WorkoutView, error)
+	Get(ctx context.Context, actorID uuid.UUID, id uuid.UUID) (*dto.WorkoutView, error)
+	Update(ctx context.Context, actorID uuid.UUID, id uuid.UUID, req dto.UpdateWorkoutRequest) (*dto.WorkoutView, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
@@ -42,12 +45,46 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		response.JSON(w, http.StatusBadRequest, response.ErrorBody{Error: err.Error(), Code: "bad_request"})
 		return
 	}
-	res, err := h.uc.Create(r.Context(), middleware.UserID(r.Context()), req)
+	role := model.Role(middleware.Role(r.Context()))
+	res, err := h.uc.Create(r.Context(), middleware.UserID(r.Context()), role, req)
 	if err != nil {
 		response.Error(w, err)
 		return
 	}
 	response.JSON(w, http.StatusCreated, res)
+}
+
+func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		response.JSON(w, http.StatusBadRequest, response.ErrorBody{Error: "invalid id", Code: "bad_request"})
+		return
+	}
+	res, err := h.uc.Get(r.Context(), middleware.UserID(r.Context()), id)
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+	response.JSON(w, http.StatusOK, res)
+}
+
+func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	if err != nil {
+		response.JSON(w, http.StatusBadRequest, response.ErrorBody{Error: "invalid id", Code: "bad_request"})
+		return
+	}
+	var req dto.UpdateWorkoutRequest
+	if err := response.Decode(r, &req); err != nil {
+		response.JSON(w, http.StatusBadRequest, response.ErrorBody{Error: err.Error(), Code: "bad_request"})
+		return
+	}
+	res, err := h.uc.Update(r.Context(), middleware.UserID(r.Context()), id, req)
+	if err != nil {
+		response.Error(w, err)
+		return
+	}
+	response.JSON(w, http.StatusOK, res)
 }
 
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {

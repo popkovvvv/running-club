@@ -3,7 +3,7 @@ import { api } from '../lib/api'
 import { useApp } from '../lib/store'
 
 export function ProgressScreen() {
-  const { theme, user } = useApp()
+  const { theme, user, openOverlay } = useApp()
   const [progress, setProgress] = useState<Awaited<ReturnType<typeof api.progress>> | null>(null)
   const [analytics, setAnalytics] = useState<Awaited<ReturnType<typeof api.analytics>> | null>(null)
   const isCoach = user?.role === 'coach'
@@ -25,7 +25,7 @@ export function ProgressScreen() {
           <div className="card" style={{ fontSize: 13, color: theme.dim }}>Нет данных</div>
         )}
         {analytics?.students?.map((s) => (
-          <div key={s.id} className="card" style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div key={s.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => openOverlay({ type: 'student', id: s.id })}>
             <div><div style={{ fontWeight: 700 }}>{s.name}</div><div style={{ fontSize: 11, color: theme.dim }}>{s.km} км</div></div>
             <div style={{ fontFamily: theme.display, fontWeight: 800, color: theme.accent }}>{s.comp}%</div>
           </div>

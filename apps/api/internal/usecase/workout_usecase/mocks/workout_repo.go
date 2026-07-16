@@ -237,6 +237,112 @@ func (_c *WorkoutRepo_FindOwnByUser_Call) RunAndReturn(run func(context.Context,
 	return _c
 }
 
+// GetByID provides a mock function with given fields: ctx, id
+func (_m *WorkoutRepo) GetByID(ctx context.Context, id uuid.UUID) (*model.Workout, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetByID")
+	}
+
+	var r0 *model.Workout
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) (*model.Workout, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) *model.Workout); ok {
+		r0 = rf(ctx, id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*model.Workout)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// WorkoutRepo_GetByID_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetByID'
+type WorkoutRepo_GetByID_Call struct {
+	*mock.Call
+}
+
+// GetByID is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id uuid.UUID
+func (_e *WorkoutRepo_Expecter) GetByID(ctx interface{}, id interface{}) *WorkoutRepo_GetByID_Call {
+	return &WorkoutRepo_GetByID_Call{Call: _e.mock.On("GetByID", ctx, id)}
+}
+
+func (_c *WorkoutRepo_GetByID_Call) Run(run func(ctx context.Context, id uuid.UUID)) *WorkoutRepo_GetByID_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *WorkoutRepo_GetByID_Call) Return(_a0 *model.Workout, _a1 error) *WorkoutRepo_GetByID_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *WorkoutRepo_GetByID_Call) RunAndReturn(run func(context.Context, uuid.UUID) (*model.Workout, error)) *WorkoutRepo_GetByID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// Update provides a mock function with given fields: ctx, w
+func (_m *WorkoutRepo) Update(ctx context.Context, w *model.Workout) error {
+	ret := _m.Called(ctx, w)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Update")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, *model.Workout) error); ok {
+		r0 = rf(ctx, w)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// WorkoutRepo_Update_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Update'
+type WorkoutRepo_Update_Call struct {
+	*mock.Call
+}
+
+// Update is a helper method to define mock.On call
+//   - ctx context.Context
+//   - w *model.Workout
+func (_e *WorkoutRepo_Expecter) Update(ctx interface{}, w interface{}) *WorkoutRepo_Update_Call {
+	return &WorkoutRepo_Update_Call{Call: _e.mock.On("Update", ctx, w)}
+}
+
+func (_c *WorkoutRepo_Update_Call) Run(run func(ctx context.Context, w *model.Workout)) *WorkoutRepo_Update_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(*model.Workout))
+	})
+	return _c
+}
+
+func (_c *WorkoutRepo_Update_Call) Return(_a0 error) *WorkoutRepo_Update_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *WorkoutRepo_Update_Call) RunAndReturn(run func(context.Context, *model.Workout) error) *WorkoutRepo_Update_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewWorkoutRepo creates a new instance of WorkoutRepo. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewWorkoutRepo(t interface {

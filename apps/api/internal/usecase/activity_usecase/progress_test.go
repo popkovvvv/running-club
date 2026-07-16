@@ -8,7 +8,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/nikpopkov/running-club/api/internal/domain/model"
-	"github.com/nikpopkov/running-club/api/internal/usecase/activity_usecase"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -52,7 +51,7 @@ func TestProgress(t *testing.T) {
 			if tt.before != nil {
 				tt.before(m)
 			}
-			uc := activity_usecase.NewUseCase(m.activityRepo)
+			uc := newUC(m)
 			res, err := uc.Progress(context.Background(), uid)
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

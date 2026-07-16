@@ -4,15 +4,24 @@ import { pulseTheme, withAccent, type Theme } from './theme'
 
 type Screen = 'home' | 'schedule' | 'plan' | 'prog' | 'races' | 'profile'
 
+export type Overlay =
+  | { type: 'activity'; id: string }
+  | { type: 'workout'; id: string }
+  | { type: 'student'; id: string }
+  | null
+
 type AppState = {
   user: User | null
   token: string | null
   theme: Theme
   club: Club | null
   screen: Screen
+  overlay: Overlay
   announces: Announce[]
   loading: boolean
   setScreen: (s: Screen) => void
+  openOverlay: (o: Overlay) => void
+  closeOverlay: () => void
   login: (email: string, password: string) => Promise<void>
   register: (name: string, email: string, password: string, role: string) => Promise<void>
   logout: () => void
@@ -34,6 +43,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
   const [club, setClub] = useState<Club | null>(null)
   const [screen, setScreen] = useState<Screen>('home')
+  const [overlay, setOverlay] = useState<Overlay>(null)
   const [announces, setAnnounces] = useState<Announce[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -89,9 +99,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     theme,
     club,
     screen,
+    overlay,
     announces,
     loading,
     setScreen,
+    openOverlay: setOverlay,
+    closeOverlay: () => setOverlay(null),
     login: async (email, password) => {
       const res = await api.login({ email, password })
       await applyAuth(res)

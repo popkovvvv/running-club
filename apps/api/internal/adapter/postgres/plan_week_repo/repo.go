@@ -49,6 +49,20 @@ func (r *Repo) FindByClub(ctx context.Context, clubID uuid.UUID) ([]*model.PlanW
 	return out, rows.Err()
 }
 
+func (r *Repo) Upsert(ctx context.Context, w *model.PlanWeek) error {
+	_, err := r.pool.Exec(ctx, `
+		INSERT INTO plan_weeks (id, club_id, week_index, range_label, plan_label)
+		VALUES ($1,$2,$3,$4,$5)
+		ON CONFLICT (club_id, week_index) DO UPDATE SET
+			range_label=EXCLUDED.range_label,
+			plan_label=EXCLUDED.plan_label`,
+		w.ID, w.ClubID, w.WeekIndex, w.RangeLabel, w.PlanLabel)
+	if err != nil {
+		return fmt.Errorf("exec: %w", err)
+	}
+	return nil
+}
+
 func (r *Repo) GetByClubAndIndex(ctx context.Context, clubID uuid.UUID, weekIndex int) (*model.PlanWeek, error) {
 	row := r.pool.QueryRow(ctx, `
 		SELECT id, club_id, week_index, range_label, plan_label

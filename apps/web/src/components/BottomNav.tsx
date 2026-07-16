@@ -38,7 +38,7 @@ const icons: Record<Tab, ReactNode> = {
 function labels(isCoach: boolean): Record<Tab, string> {
   return {
     home: isCoach ? 'Ученики' : 'Главная',
-    plan: isCoach ? 'Конструктор' : 'План',
+    plan: isCoach ? 'План недели' : 'План',
     prog: isCoach ? 'Аналитика' : 'Прогресс',
     races: 'Старты',
     profile: isCoach ? 'Клуб' : 'Профиль',

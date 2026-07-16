@@ -1,3 +1,5 @@
+import type { WorkoutType } from './workoutTypes'
+
 const BASE = import.meta.env.VITE_API_BASE || '/api/v1'
 
 export type User = {
@@ -51,6 +53,61 @@ export type Activity = {
   visibility?: string
 }
 
+export type ActivityDetail = Activity & {
+  startedAt?: string
+  movingSeconds?: number
+  elapsedSeconds?: number
+  maxHeartrate?: number
+  polyline?: string
+  externalId?: string
+  linkedWorkoutId?: string
+}
+
+export type ActivityStream = { type: string; data: string }
+
+export type Segment = { id?: string; kind: string; title: string; distKm: number; pace: string }
+
+export type Workout = {
+  id: string
+  kind: string
+  workoutType: WorkoutType
+  dayLabel: string
+  tag: string
+  title: string
+  description?: string
+  distKm: number
+  duration: string
+  pace: string
+  hr: string
+  weekIndex: number
+  scheduledDate?: string
+  status: string
+  completedActivityId?: string
+  assignedBy?: string
+  isClubTemplate?: boolean
+  segments?: Segment[]
+}
+
+export type PlanWeek = { weekIndex: number; rangeLabel: string; planLabel: string }
+
+export type Student = {
+  id: string
+  init: string
+  name: string
+  sub: string
+  km: string
+  comp: number
+}
+
+export type StudentDetail = {
+  student: Student
+  weekKm: string
+  weekPlanKm: string
+  comp: number
+  planDays: Array<{ dayLabel: string; title: string; workoutType: string; plannedKm: number; actualKm: number; status: string }>
+  recentActivities: Activity[]
+}
+
 export type IntegrationStatus = {
   provider: string
   status: string
@@ -61,15 +118,6 @@ export type IntegrationStatus = {
   lastSyncedAt?: string
   lastWebhookAt?: string
   lastError?: string
-}
-
-export type Student = {
-  id: string
-  init: string
-  name: string
-  sub: string
-  km: string
-  comp: number
 }
 
 type AuthResponse = { token: string; user: User }
@@ -110,6 +158,7 @@ export const api = {
   palette: (accentHex: string) =>
     request<Club>('/club/palette', { method: 'PATCH', body: JSON.stringify({ accentHex }) }),
   students: () => request<Student[]>('/club/students'),
+  student: (id: string, week = 0) => request<StudentDetail>(`/club/students/${id}?week=${week}`),
   removeStudent: (id: string) => request<{ status: string }>(`/club/students/${id}`, { method: 'DELETE' }),
   announces: () => request<Announce[]>('/announces'),
   publishAnnounce: (body: { place: string; day: string; time: string; group: string; note: string }) =>
@@ -117,10 +166,22 @@ export const api = {
   signup: (id: string) => request<Announce>(`/announces/${id}/signup`, { method: 'POST' }),
   unsignup: (id: string) => request<Announce>(`/announces/${id}/signup`, { method: 'DELETE' }),
   calendar: () => request<{ cells: Array<{ key: string; n: number; blank: boolean; has: boolean; isToday: boolean; bg: string; fg: string; dot: string }> }>('/schedule/calendar'),
-  plan: (week = 1) => request<{ weekIndex: number; weekRange: string; weekPlan: string; days: Array<{ id: string; dayLabel: string; tag: string; title: string; distKm: number; duration: string }>; mine: Array<{ id: string; dayLabel: string; tag: string; title: string; duration: string }> }>(`/plan?week=${week}`),
-  createWorkout: (body: Record<string, unknown>) =>
-    request('/workouts', { method: 'POST', body: JSON.stringify(body) }),
+  plan: (week = 0) => request<{ weekIndex: number; weekRange: string; weekPlan: string; days: Workout[]; mine: Workout[] }>(`/plan?week=${week}`),
+  planWeeks: () => request<PlanWeek[]>('/plan/weeks'),
+  upsertPlanWeek: (weekIndex: number, body: { rangeLabel: string; planLabel: string }) =>
+    request<PlanWeek>(`/plan/weeks/${weekIndex}`, { method: 'PUT', body: JSON.stringify(body) }),
+  planTemplate: (weekIndex: number) => request<{ weekIndex: number; workouts: Workout[] }>(`/plan/weeks/${weekIndex}/template`),
+  savePlanTemplate: (weekIndex: number, workouts: Record<string, unknown>[]) =>
+    request<{ weekIndex: number; workouts: Workout[] }>(`/plan/weeks/${weekIndex}/template`, { method: 'PUT', body: JSON.stringify({ workouts }) }),
+  publishPlan: (weekIndex: number) => request<{ status: string }>(`/plan/weeks/${weekIndex}/publish`, { method: 'POST' }),
+  createWorkout: (body: Record<string, unknown>) => request<Workout>('/workouts', { method: 'POST', body: JSON.stringify(body) }),
+  getWorkout: (id: string) => request<Workout>(`/workouts/${id}`),
+  updateWorkout: (id: string, body: Record<string, unknown>) =>
+    request<Workout>(`/workouts/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+  deleteWorkout: (id: string) => request<{ status: string }>(`/workouts/${id}`, { method: 'DELETE' }),
   activities: () => request<Activity[]>('/activities'),
+  activity: (id: string) => request<ActivityDetail>(`/activities/${id}`),
+  activityStreams: (id: string) => request<ActivityStream[]>(`/activities/${id}/streams`),
   stravaIntegration: () => request<IntegrationStatus>('/integrations/strava'),
   connectStrava: () => request<{ url: string }>('/integrations/strava/connect'),
   disconnectStrava: () => request<{ status: string }>('/integrations/strava/disconnect', { method: 'POST' }),

@@ -21,8 +21,10 @@ import (
 	"github.com/nikpopkov/running-club/api/internal/app/http/auth"
 	"github.com/nikpopkov/running-club/api/internal/app/http/club"
 	"github.com/nikpopkov/running-club/api/internal/app/http/integration"
+	"github.com/nikpopkov/running-club/api/internal/app/http/plan"
 	"github.com/nikpopkov/running-club/api/internal/app/http/router"
 	"github.com/nikpopkov/running-club/api/internal/app/http/schedule"
+	"github.com/nikpopkov/running-club/api/internal/app/http/student"
 	"github.com/nikpopkov/running-club/api/internal/app/http/workout"
 	"github.com/nikpopkov/running-club/api/internal/config"
 	"github.com/nikpopkov/running-club/api/internal/pkg/authjwt"
@@ -30,8 +32,10 @@ import (
 	"github.com/nikpopkov/running-club/api/internal/usecase/analytics_usecase"
 	"github.com/nikpopkov/running-club/api/internal/usecase/auth_usecase"
 	"github.com/nikpopkov/running-club/api/internal/usecase/club_usecase"
+	"github.com/nikpopkov/running-club/api/internal/usecase/plan_usecase"
 	"github.com/nikpopkov/running-club/api/internal/usecase/schedule_usecase"
 	"github.com/nikpopkov/running-club/api/internal/usecase/strava_usecase"
+	"github.com/nikpopkov/running-club/api/internal/usecase/student_usecase"
 	"github.com/nikpopkov/running-club/api/internal/usecase/workout_usecase"
 )
 
@@ -83,8 +87,10 @@ func (s *ServiceProvider) Handler() http.Handler {
 	authUC := auth_usecase.NewUseCase(userRepo, membershipRepo, clubRepo, s.jwt)
 	clubUC := club_usecase.NewUseCase(clubRepo, membershipRepo, userRepo, activityRepo, announceRepo, planWeekRepo)
 	scheduleUC := schedule_usecase.NewUseCase(announceRepo, clubRepo, membershipRepo)
-	workoutUC := workout_usecase.NewUseCase(workoutRepo, planWeekRepo, membershipRepo)
-	activityUC := activity_usecase.NewUseCase(activityRepo)
+	workoutUC := workout_usecase.NewUseCase(workoutRepo, planWeekRepo, membershipRepo, clubRepo)
+	planUC := plan_usecase.NewUseCase(planWeekRepo, workoutRepo, clubRepo, userRepo, membershipRepo)
+	activityUC := activity_usecase.NewUseCase(activityRepo, activityStreamRepo, workoutRepo, clubRepo, membershipRepo)
+	studentUC := student_usecase.NewUseCase(clubRepo, userRepo, membershipRepo, activityRepo, workoutRepo, planWeekRepo, announceRepo)
 	analyticsUC := analytics_usecase.NewUseCase(clubRepo, userRepo, activityRepo, announceRepo, planWeekRepo)
 	stravaUC := strava_usecase.NewUseCase(
 		userIntegrationRepo,
@@ -103,9 +109,11 @@ func (s *ServiceProvider) Handler() http.Handler {
 		Club:        club.NewHandler(clubUC),
 		Integration: integration.NewHandler(stravaUC, s.cfg.StravaWebhookToken, s.cfg.WebBaseURL),
 		Schedule:    schedule.NewHandler(scheduleUC),
+		Plan:        plan.NewHandler(planUC),
 		Workout:     workout.NewHandler(workoutUC),
 		Activity:    activity.NewHandler(activityUC),
 		Analytics:   analytics.NewHandler(analyticsUC),
+		Student:     student.NewHandler(studentUC),
 		JWT:         s.jwt,
 	})
 }

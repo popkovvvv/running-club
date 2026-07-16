@@ -28,9 +28,30 @@ packages:
       workoutRepo:
       planWeekRepo:
       membershipRepo:
+      clubRepo:
+  github.com/nikpopkov/running-club/api/internal/usecase/plan_usecase:
+    interfaces:
+      planWeekRepo:
+      workoutRepo:
+      clubRepo:
+      userRepo:
+      membershipRepo:
+  github.com/nikpopkov/running-club/api/internal/usecase/student_usecase:
+    interfaces:
+      clubRepo:
+      userRepo:
+      membershipRepo:
+      activityRepo:
+      workoutRepo:
+      planWeekRepo:
+      announceRepo:
   github.com/nikpopkov/running-club/api/internal/usecase/activity_usecase:
     interfaces:
       activityRepo:
+      activityStreamRepo:
+      workoutRepo:
+      clubRepo:
+      membershipRepo:
   github.com/nikpopkov/running-club/api/internal/usecase/analytics_usecase:
     interfaces:
       clubRepo:

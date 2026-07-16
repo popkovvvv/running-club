@@ -3,7 +3,7 @@ import { api, type Student } from '../lib/api'
 import { useApp } from '../lib/store'
 
 export function HomeCoach() {
-  const { theme, announces, removeStudent, setScreen } = useApp()
+  const { theme, announces, removeStudent, openOverlay } = useApp()
   const [students, setStudents] = useState<Student[]>([])
   const [attendance, setAttendance] = useState<number | null>(null)
 
@@ -37,7 +37,7 @@ export function HomeCoach() {
       {students.map((s) => (
         <div key={s.id} className="card" data-testid="student-row" style={{ borderRadius: 16, display: 'flex', gap: 13, alignItems: 'center' }}>
           <div style={{ width: 46, height: 46, borderRadius: '50%', background: theme.card2, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.accent, fontWeight: 800 }}>{s.init}</div>
-          <div style={{ flex: 1 }} onClick={() => setScreen('plan')}><div style={{ fontWeight: 700 }}>{s.name}</div><div style={{ fontSize: 11, color: theme.dim }}>{s.sub}</div></div>
+          <div style={{ flex: 1, cursor: 'pointer' }} onClick={() => openOverlay({ type: 'student', id: s.id })}><div style={{ fontWeight: 700 }}>{s.name}</div><div style={{ fontSize: 11, color: theme.dim }}>{s.sub}</div></div>
           <button
             data-testid="remove-student"
             className="btn"

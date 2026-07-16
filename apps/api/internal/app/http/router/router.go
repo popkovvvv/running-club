@@ -12,7 +12,9 @@ import (
 	"github.com/nikpopkov/running-club/api/internal/app/http/club"
 	"github.com/nikpopkov/running-club/api/internal/app/http/integration"
 	"github.com/nikpopkov/running-club/api/internal/app/http/middleware"
+	"github.com/nikpopkov/running-club/api/internal/app/http/plan"
 	"github.com/nikpopkov/running-club/api/internal/app/http/schedule"
+	"github.com/nikpopkov/running-club/api/internal/app/http/student"
 	"github.com/nikpopkov/running-club/api/internal/app/http/workout"
 	"github.com/nikpopkov/running-club/api/internal/pkg/authjwt"
 )
@@ -22,9 +24,11 @@ type Handlers struct {
 	Club        *club.Handler
 	Integration *integration.Handler
 	Schedule    *schedule.Handler
+	Plan        *plan.Handler
 	Workout     *workout.Handler
 	Activity    *activity.Handler
 	Analytics   *analytics.Handler
+	Student     *student.Handler
 	JWT         *authjwt.Manager
 }
 
@@ -33,7 +37,7 @@ func New(h Handlers) http.Handler {
 	r.Use(chimw.RequestID, chimw.RealIP, chimw.Logger, chimw.Recoverer)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS", "PUT"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
 		AllowCredentials: true,
 	}))
@@ -61,6 +65,7 @@ func New(h Handlers) http.Handler {
 			priv.Post("/club/leave", h.Club.Leave)
 			priv.Patch("/club/palette", h.Club.Palette)
 			priv.Get("/club/students", h.Club.Students)
+			priv.Get("/club/students/{id}", h.Student.Get)
 			priv.Delete("/club/students/{id}", h.Club.RemoveStudent)
 
 			priv.Get("/announces", h.Schedule.List)
@@ -70,10 +75,20 @@ func New(h Handlers) http.Handler {
 			priv.Get("/schedule/calendar", h.Schedule.Calendar)
 
 			priv.Get("/plan", h.Workout.Plan)
+			priv.Get("/plan/weeks", h.Plan.ListWeeks)
+			priv.Put("/plan/weeks/{weekIndex}", h.Plan.UpsertWeek)
+			priv.Get("/plan/weeks/{weekIndex}/template", h.Plan.GetTemplate)
+			priv.Put("/plan/weeks/{weekIndex}/template", h.Plan.SaveTemplate)
+			priv.Post("/plan/weeks/{weekIndex}/publish", h.Plan.Publish)
+
 			priv.Post("/workouts", h.Workout.Create)
+			priv.Get("/workouts/{id}", h.Workout.Get)
+			priv.Patch("/workouts/{id}", h.Workout.Update)
 			priv.Delete("/workouts/{id}", h.Workout.Delete)
 
 			priv.Get("/activities", h.Activity.List)
+			priv.Get("/activities/{id}", h.Activity.Get)
+			priv.Get("/activities/{id}/streams", h.Activity.Streams)
 			priv.Get("/progress", h.Activity.Progress)
 			priv.Get("/prs", h.Activity.PRs)
 			priv.Get("/races", h.Activity.Races)

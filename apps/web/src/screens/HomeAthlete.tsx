@@ -1,33 +1,21 @@
 import { useEffect, useState } from 'react'
+import { ActivityMap } from '../components/activity/ActivityMap'
 import { api, type Activity } from '../lib/api'
 import { useApp } from '../lib/store'
-
-function TrackMap({ a, accent }: { a: Activity; accent: string }) {
-  return (
-    <div style={{ height: 120, borderRadius: 14, overflow: 'hidden', background: 'linear-gradient(160deg,#1a2330,#0f141c)', position: 'relative', marginTop: 12 }}>
-      <svg viewBox="0 0 300 140" style={{ width: '100%', height: '100%' }}>
-        <path d={a.route} fill="none" stroke={accent} strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx={a.sx} cy={a.sy} r="5" fill={accent} />
-        <circle cx={a.ex} cy={a.ey} r="5" fill="#fff" stroke={accent} strokeWidth="2" />
-      </svg>
-      <div style={{ position: 'absolute', right: 10, bottom: 8, fontSize: 10, fontWeight: 800, color: '#9aa2ab' }}>GPS</div>
-    </div>
-  )
-}
 
 function weekKm(activities: Activity[]) {
   return activities.reduce((sum, a) => sum + (parseFloat(a.dist) || 0), 0)
 }
 
 export function HomeAthlete({ activities }: { activities: Activity[] }) {
-  const { theme, club, announces, setScreen, user } = useApp()
+  const { theme, club, announces, setScreen, user, openOverlay } = useApp()
   const [weekPlan, setWeekPlan] = useState('')
   const next = announces[0]
   const done = weekKm(activities)
   const doneLabel = done > 0 ? done.toFixed(1) : '0'
 
   useEffect(() => {
-    void api.plan(1).then((p) => setWeekPlan(p.weekPlan || '')).catch(() => setWeekPlan(''))
+    void api.plan(0).then((p) => setWeekPlan(p.weekPlan || '')).catch(() => setWeekPlan(''))
   }, [])
 
   return (
@@ -61,7 +49,7 @@ export function HomeAthlete({ activities }: { activities: Activity[] }) {
         <div className="card" style={{ fontSize: 13, color: theme.dim }}>Пока нет активностей</div>
       )}
       {activities.map((a) => (
-        <div key={a.id} className="card" data-testid="activity-card">
+        <div key={a.id} className="card" data-testid="activity-card" onClick={() => openOverlay({ type: 'activity', id: a.id })} style={{ cursor: 'pointer' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
             <div style={{ fontWeight: 700 }}>{a.title}</div>
             {a.source && <div style={{ fontSize: 10, color: theme.accent, fontWeight: 800, letterSpacing: '.6px' }}>{a.source.toUpperCase()}</div>}
@@ -72,7 +60,9 @@ export function HomeAthlete({ activities }: { activities: Activity[] }) {
             <div><div style={{ fontFamily: theme.display, fontWeight: 800 }}>{a.time}</div><div style={{ fontSize: 10, color: theme.dim }}>время</div></div>
             <div><div style={{ fontFamily: theme.display, fontWeight: 800 }}>{a.pace}</div><div style={{ fontSize: 10, color: theme.dim }}>темп</div></div>
           </div>
-          <TrackMap a={a} accent={theme.accent} />
+          <div style={{ marginTop: 12 }}>
+            <ActivityMap activity={a} accent={theme.accent} height={120} />
+          </div>
         </div>
       ))}
     </div>
