@@ -72,25 +72,19 @@ export default function App() {
 
   return (
     <div className="phone" style={vars} data-testid="phone-app">
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 26px 6px', fontSize: 14, fontWeight: 700 }}>
-        <span>9:41</span>
-        <span style={{ width: 22, height: 11, border: `1.5px solid ${theme.text}`, borderRadius: 3, display: 'inline-block' }} />
-      </div>
-      <div style={{ padding: '8px 18px 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ minWidth: 0, flex: 1, paddingRight: 12 }}>
-            <div className="display-title" style={{ fontSize: 22, color: theme.text }}>{theme.name}</div>
-            <div style={{ fontSize: 12, color: theme.dim, fontWeight: 700, marginTop: 2 }}>{isCoach ? 'Кабинет тренера' : 'Личный кабинет'}</div>
-          </div>
-          <div
-            style={{ width: 42, height: 42, flex: 'none', borderRadius: '50%', background: theme.card2, border: `1.5px solid ${theme.accent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.accent, fontWeight: 800 }}
-            onClick={() => setScreen('profile')}
-          >
-            {initials(user.name, isCoach)}
-          </div>
+      <div className="phone-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ minWidth: 0, flex: 1, paddingRight: 12 }}>
+          <div className="display-title" style={{ fontSize: 22, color: theme.text }}>{theme.name}</div>
+          <div style={{ fontSize: 12, color: theme.dim, fontWeight: 700, marginTop: 2 }}>{isCoach ? 'Кабинет тренера' : 'Личный кабинет'}</div>
+        </div>
+        <div
+          style={{ width: 42, height: 42, flex: 'none', borderRadius: '50%', background: theme.card2, border: `1.5px solid ${theme.accent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.accent, fontWeight: 800 }}
+          onClick={() => setScreen('profile')}
+        >
+          {initials(user.name, isCoach)}
         </div>
       </div>
-      <div className="scrl" style={{ flex: 1, overflowY: 'auto', padding: '2px 16px 96px' }}>
+      <div className="scrl phone-scroll">
         {mainContent}
       </div>
       {!overlay && <BottomNav />}

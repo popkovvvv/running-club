@@ -8,14 +8,10 @@ export function RoleEntry({ onPick }: { onPick: (role: Role) => void }) {
   return (
     <div
       data-testid="role-entry"
-      className="gate-atmos"
-      style={{
-        position: 'absolute', inset: 0, zIndex: 50,
-        display: 'flex', flexDirection: 'column', padding: '70px 26px 34px',
-      }}
+      className="gate-atmos gate-shell"
     >
       <div style={{ textAlign: 'center', marginBottom: 28 }}>
-        <div className="display-title" style={{ fontSize: 40, color: theme.accent }}>{theme.name}</div>
+        <div className="display-title" style={{ fontSize: 'clamp(32px, 8vw, 44px)', color: theme.accent }}>{theme.name}</div>
         <div style={{ fontSize: 13, color: theme.dim, fontWeight: 600, marginTop: 8 }}>Клуб бегового прогресса</div>
       </div>
       <div className="card">
