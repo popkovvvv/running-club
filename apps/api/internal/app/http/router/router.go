@@ -10,6 +10,7 @@ import (
 	"github.com/nikpopkov/running-club/api/internal/app/http/analytics"
 	"github.com/nikpopkov/running-club/api/internal/app/http/auth"
 	"github.com/nikpopkov/running-club/api/internal/app/http/club"
+	"github.com/nikpopkov/running-club/api/internal/app/http/integration"
 	"github.com/nikpopkov/running-club/api/internal/app/http/middleware"
 	"github.com/nikpopkov/running-club/api/internal/app/http/schedule"
 	"github.com/nikpopkov/running-club/api/internal/app/http/workout"
@@ -17,13 +18,14 @@ import (
 )
 
 type Handlers struct {
-	Auth      *auth.Handler
-	Club      *club.Handler
-	Schedule  *schedule.Handler
-	Workout   *workout.Handler
-	Activity  *activity.Handler
-	Analytics *analytics.Handler
-	JWT       *authjwt.Manager
+	Auth        *auth.Handler
+	Club        *club.Handler
+	Integration *integration.Handler
+	Schedule    *schedule.Handler
+	Workout     *workout.Handler
+	Activity    *activity.Handler
+	Analytics   *analytics.Handler
+	JWT         *authjwt.Manager
 }
 
 func New(h Handlers) http.Handler {
@@ -44,6 +46,9 @@ func New(h Handlers) http.Handler {
 	r.Route("/api/v1", func(api chi.Router) {
 		api.Post("/auth/register", h.Auth.Register)
 		api.Post("/auth/login", h.Auth.Login)
+		api.Get("/integrations/strava/callback", h.Integration.Callback)
+		api.Get("/integrations/strava/webhook", h.Integration.WebhookVerify)
+		api.Post("/integrations/strava/webhook", h.Integration.Webhook)
 
 		api.Group(func(priv chi.Router) {
 			priv.Use(middleware.Auth(h.JWT))
@@ -73,6 +78,9 @@ func New(h Handlers) http.Handler {
 			priv.Get("/prs", h.Activity.PRs)
 			priv.Get("/races", h.Activity.Races)
 			priv.Get("/analytics", h.Analytics.Get)
+			priv.Get("/integrations/strava", h.Integration.Status)
+			priv.Get("/integrations/strava/connect", h.Integration.Connect)
+			priv.Post("/integrations/strava/disconnect", h.Integration.Disconnect)
 		})
 	})
 

@@ -3,20 +3,24 @@ package dto
 import "github.com/google/uuid"
 
 type ActivityView struct {
-	ID    uuid.UUID `json:"id"`
-	Title string    `json:"title"`
-	When  string    `json:"when"`
-	Dist  string    `json:"dist"`
-	Time  string    `json:"time"`
-	Pace  string    `json:"pace"`
-	HR    string    `json:"hr"`
-	Kudos int       `json:"kudos"`
-	ComN  int       `json:"comN"`
-	Route string    `json:"route"`
-	SX    float64   `json:"sx"`
-	SY    float64   `json:"sy"`
-	EX    float64   `json:"ex"`
-	EY    float64   `json:"ey"`
+	ID         uuid.UUID `json:"id"`
+	Title      string    `json:"title"`
+	When       string    `json:"when"`
+	Dist       string    `json:"dist"`
+	Time       string    `json:"time"`
+	Pace       string    `json:"pace"`
+	HR         string    `json:"hr"`
+	Kudos      int       `json:"kudos"`
+	ComN       int       `json:"comN"`
+	Route      string    `json:"route"`
+	SX         float64   `json:"sx"`
+	SY         float64   `json:"sy"`
+	EX         float64   `json:"ex"`
+	EY         float64   `json:"ey"`
+	Source     string    `json:"source,omitempty"`
+	SportType  string    `json:"sportType,omitempty"`
+	Elevation  float64   `json:"elevation,omitempty"`
+	Visibility string    `json:"visibility,omitempty"`
 }
 
 func NewActivityView(
@@ -25,22 +29,29 @@ func NewActivityView(
 	kudos, comN int,
 	route string,
 	sx, sy, ex, ey float64,
+	source, sportType string,
+	elevation float64,
+	visibility string,
 ) ActivityView {
 	return ActivityView{
-		ID:    id,
-		Title: title,
-		When:  when,
-		Dist:  dist,
-		Time:  timeLabel,
-		Pace:  pace,
-		HR:    hr,
-		Kudos: kudos,
-		ComN:  comN,
-		Route: route,
-		SX:    sx,
-		SY:    sy,
-		EX:    ex,
-		EY:    ey,
+		ID:         id,
+		Title:      title,
+		When:       when,
+		Dist:       dist,
+		Time:       timeLabel,
+		Pace:       pace,
+		HR:         hr,
+		Kudos:      kudos,
+		ComN:       comN,
+		Route:      route,
+		SX:         sx,
+		SY:         sy,
+		EX:         ex,
+		EY:         ey,
+		Source:     source,
+		SportType:  sportType,
+		Elevation:  elevation,
+		Visibility: visibility,
 	}
 }
 

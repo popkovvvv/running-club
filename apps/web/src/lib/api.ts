@@ -45,6 +45,22 @@ export type Activity = {
   sy: number
   ex: number
   ey: number
+  source?: string
+  sportType?: string
+  elevation?: number
+  visibility?: string
+}
+
+export type IntegrationStatus = {
+  provider: string
+  status: string
+  connected: boolean
+  externalAthleteId?: string
+  scopes?: string[]
+  expiresAt?: string
+  lastSyncedAt?: string
+  lastWebhookAt?: string
+  lastError?: string
 }
 
 export type Student = {
@@ -105,6 +121,9 @@ export const api = {
   createWorkout: (body: Record<string, unknown>) =>
     request('/workouts', { method: 'POST', body: JSON.stringify(body) }),
   activities: () => request<Activity[]>('/activities'),
+  stravaIntegration: () => request<IntegrationStatus>('/integrations/strava'),
+  connectStrava: () => request<{ url: string }>('/integrations/strava/connect'),
+  disconnectStrava: () => request<{ status: string }>('/integrations/strava/disconnect', { method: 'POST' }),
   progress: () => request<{ months: Array<{ m: string; km: number; tr: number; pace: string; diff: string }>; yearKm: number; yearTr: number; yearStarts: number }>('/progress'),
   analytics: () => request<{ clubKm: number; attendance: number; students: Student[] }>('/analytics'),
   races: () => request<Array<{ days: string; name: string; date: string; dist: string; goal: string }>>('/races'),

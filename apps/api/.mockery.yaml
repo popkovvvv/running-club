@@ -38,3 +38,9 @@ packages:
       activityRepo:
       announceRepo:
       planWeekRepo:
+  github.com/nikpopkov/running-club/api/internal/usecase/strava_usecase:
+    interfaces:
+      integrationRepo:
+      activityRepo:
+      activityStreamRepo:
+      stravaClient:

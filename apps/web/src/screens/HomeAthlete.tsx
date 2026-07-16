@@ -62,7 +62,10 @@ export function HomeAthlete({ activities }: { activities: Activity[] }) {
       )}
       {activities.map((a) => (
         <div key={a.id} className="card" data-testid="activity-card">
-          <div style={{ fontWeight: 700 }}>{a.title}</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+            <div style={{ fontWeight: 700 }}>{a.title}</div>
+            {a.source && <div style={{ fontSize: 10, color: theme.accent, fontWeight: 800, letterSpacing: '.6px' }}>{a.source.toUpperCase()}</div>}
+          </div>
           <div style={{ fontSize: 11, color: theme.dim }}>{a.when}</div>
           <div style={{ display: 'flex', gap: 14, marginTop: 10 }}>
             <div><div style={{ fontFamily: theme.display, fontWeight: 800 }}>{a.dist}</div><div style={{ fontSize: 10, color: theme.dim }}>км</div></div>

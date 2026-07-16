@@ -19,6 +19,7 @@ func (u *UseCase) ListActivities(ctx context.Context, userID uuid.UUID) ([]dto.A
 		out = append(out, dto.NewActivityView(
 			a.ID, a.Title, a.WhenLabel, formatKm(a.DistKm), a.Duration, a.Pace, strconv.Itoa(a.HR),
 			a.Kudos, a.Comments, a.RouteSVG, a.StartX, a.StartY, a.EndX, a.EndY,
+			a.Source, a.SportType, a.ElevationGain, a.Visibility,
 		))
 	}
 	return out, nil

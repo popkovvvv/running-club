@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { api, type IntegrationStatus } from '../lib/api'
 import { useApp } from '../lib/store'
 
 const PALETTE = ['#ff5c22', '#c8ff34', '#4a9eff', '#ff3d81', '#22d3c5', '#ffd23f']
@@ -14,6 +15,45 @@ export function ProfileAthlete() {
   const { theme, user, club, joinClub, leaveClub, logout } = useApp()
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
+  const [strava, setStrava] = useState<IntegrationStatus | null>(null)
+  const [stravaLoading, setStravaLoading] = useState(true)
+  const [stravaError, setStravaError] = useState('')
+
+  useEffect(() => {
+    let mounted = true
+    void api.stravaIntegration()
+      .then((res) => {
+        if (mounted) {
+          setStrava(res)
+          setStravaError('')
+        }
+      })
+      .catch((e) => {
+        if (mounted) {
+          setStravaError(e instanceof Error ? e.message : 'Ошибка')
+        }
+      })
+      .finally(() => {
+        if (mounted) {
+          setStravaLoading(false)
+        }
+      })
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  const connectStrava = async () => {
+    const res = await api.connectStrava()
+    window.location.assign(res.url)
+  }
+
+  const disconnectStrava = async () => {
+    await api.disconnectStrava()
+    const next = await api.stravaIntegration()
+    setStrava(next)
+    setStravaError('')
+  }
 
   return (
     <div className="fade" style={{ display: 'flex', flexDirection: 'column', gap: 14 }} data-testid="profile-athlete">
@@ -41,6 +81,39 @@ export function ProfileAthlete() {
               style={{ marginTop: 12, width: '100%', background: theme.accent, color: theme.onAccent, borderRadius: 12, padding: 12 }}
             >
               Вступить по коду
+            </button>
+          </>
+        )}
+      </div>
+      <div className="card" data-testid="strava-block">
+        <div style={{ fontFamily: theme.display, fontWeight: 800, marginBottom: 8 }}>Strava</div>
+        {stravaLoading ? (
+          <div style={{ fontSize: 13, color: theme.dim }}>Проверяем подключение…</div>
+        ) : strava?.connected ? (
+          <>
+            <div style={{ fontSize: 14 }}>Подключена</div>
+            <div style={{ fontSize: 12, color: theme.dim, marginTop: 6 }}>Athlete ID: {strava.externalAthleteId || '—'}</div>
+            <div style={{ fontSize: 12, color: theme.dim, marginTop: 4 }}>Последняя синхронизация: {strava.lastSyncedAt || 'ещё не было'}</div>
+            <button
+              data-testid="strava-disconnect"
+              className="btn"
+              onClick={() => void disconnectStrava()}
+              style={{ marginTop: 12, width: '100%', background: theme.card2, color: theme.accent, borderRadius: 12, padding: 12 }}
+            >
+              Отключить Strava
+            </button>
+          </>
+        ) : (
+          <>
+            <div style={{ fontSize: 14 }}>Strava не подключена</div>
+            {stravaError && <div style={{ color: theme.accent, fontSize: 12, marginTop: 8 }}>{stravaError}</div>}
+            <button
+              data-testid="strava-connect"
+              className="btn"
+              onClick={() => void connectStrava()}
+              style={{ marginTop: 12, width: '100%', background: theme.accent, color: theme.onAccent, borderRadius: 12, padding: 12 }}
+            >
+              Подключить Strava
             </button>
           </>
         )}

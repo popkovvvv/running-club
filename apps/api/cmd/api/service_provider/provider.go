@@ -7,16 +7,20 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nikpopkov/running-club/api/internal/adapter/postgres/activity_repo"
+	"github.com/nikpopkov/running-club/api/internal/adapter/postgres/activity_stream_repo"
 	"github.com/nikpopkov/running-club/api/internal/adapter/postgres/announce_repo"
 	"github.com/nikpopkov/running-club/api/internal/adapter/postgres/club_repo"
 	"github.com/nikpopkov/running-club/api/internal/adapter/postgres/membership_repo"
 	"github.com/nikpopkov/running-club/api/internal/adapter/postgres/plan_week_repo"
+	"github.com/nikpopkov/running-club/api/internal/adapter/postgres/user_integration_repo"
 	"github.com/nikpopkov/running-club/api/internal/adapter/postgres/user_repo"
 	"github.com/nikpopkov/running-club/api/internal/adapter/postgres/workout_repo"
+	"github.com/nikpopkov/running-club/api/internal/adapter/strava"
 	"github.com/nikpopkov/running-club/api/internal/app/http/activity"
 	"github.com/nikpopkov/running-club/api/internal/app/http/analytics"
 	"github.com/nikpopkov/running-club/api/internal/app/http/auth"
 	"github.com/nikpopkov/running-club/api/internal/app/http/club"
+	"github.com/nikpopkov/running-club/api/internal/app/http/integration"
 	"github.com/nikpopkov/running-club/api/internal/app/http/router"
 	"github.com/nikpopkov/running-club/api/internal/app/http/schedule"
 	"github.com/nikpopkov/running-club/api/internal/app/http/workout"
@@ -27,6 +31,7 @@ import (
 	"github.com/nikpopkov/running-club/api/internal/usecase/auth_usecase"
 	"github.com/nikpopkov/running-club/api/internal/usecase/club_usecase"
 	"github.com/nikpopkov/running-club/api/internal/usecase/schedule_usecase"
+	"github.com/nikpopkov/running-club/api/internal/usecase/strava_usecase"
 	"github.com/nikpopkov/running-club/api/internal/usecase/workout_usecase"
 )
 
@@ -59,7 +64,7 @@ func (s *ServiceProvider) Close() {
 	}
 }
 
-func (s *ServiceProvider) Pool() *pgxpool.Pool { return s.pool }
+func (s *ServiceProvider) Pool() *pgxpool.Pool   { return s.pool }
 func (s *ServiceProvider) JWT() *authjwt.Manager { return s.jwt }
 func (s *ServiceProvider) Config() config.Config { return s.cfg }
 
@@ -70,7 +75,10 @@ func (s *ServiceProvider) Handler() http.Handler {
 	announceRepo := announce_repo.NewRepo(s.pool)
 	workoutRepo := workout_repo.NewRepo(s.pool)
 	activityRepo := activity_repo.NewRepo(s.pool)
+	activityStreamRepo := activity_stream_repo.NewRepo(s.pool)
+	userIntegrationRepo := user_integration_repo.NewRepo(s.pool)
 	planWeekRepo := plan_week_repo.NewRepo(s.pool)
+	stravaClient := strava.NewClient(nil, s.cfg.StravaClientID, s.cfg.StravaClientSecret)
 
 	authUC := auth_usecase.NewUseCase(userRepo, membershipRepo, clubRepo, s.jwt)
 	clubUC := club_usecase.NewUseCase(clubRepo, membershipRepo, userRepo, activityRepo, announceRepo, planWeekRepo)
@@ -78,14 +86,26 @@ func (s *ServiceProvider) Handler() http.Handler {
 	workoutUC := workout_usecase.NewUseCase(workoutRepo, planWeekRepo, membershipRepo)
 	activityUC := activity_usecase.NewUseCase(activityRepo)
 	analyticsUC := analytics_usecase.NewUseCase(clubRepo, userRepo, activityRepo, announceRepo, planWeekRepo)
+	stravaUC := strava_usecase.NewUseCase(
+		userIntegrationRepo,
+		activityRepo,
+		activityStreamRepo,
+		stravaClient,
+		strava_usecase.Config{
+			ClientID:     s.cfg.StravaClientID,
+			ClientSecret: s.cfg.StravaClientSecret,
+			RedirectURL:  s.cfg.StravaRedirectURL,
+		},
+	)
 
 	return router.New(router.Handlers{
-		Auth:      auth.NewHandler(authUC),
-		Club:      club.NewHandler(clubUC),
-		Schedule:  schedule.NewHandler(scheduleUC),
-		Workout:   workout.NewHandler(workoutUC),
-		Activity:  activity.NewHandler(activityUC),
-		Analytics: analytics.NewHandler(analyticsUC),
-		JWT:       s.jwt,
+		Auth:        auth.NewHandler(authUC),
+		Club:        club.NewHandler(clubUC),
+		Integration: integration.NewHandler(stravaUC, s.cfg.StravaWebhookToken, s.cfg.WebBaseURL),
+		Schedule:    schedule.NewHandler(scheduleUC),
+		Workout:     workout.NewHandler(workoutUC),
+		Activity:    activity.NewHandler(activityUC),
+		Analytics:   analytics.NewHandler(analyticsUC),
+		JWT:         s.jwt,
 	})
 }

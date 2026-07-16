@@ -7,22 +7,35 @@ import (
 )
 
 type Activity struct {
-	ID        uuid.UUID
-	UserID    uuid.UUID
-	Title     string
-	WhenLabel string
-	DistKm    float64
-	Duration  string
-	Pace      string
-	HR        int
-	Kudos     int
-	Comments  int
-	RouteSVG  string
-	StartX    float64
-	StartY    float64
-	EndX      float64
-	EndY      float64
-	CreatedAt time.Time
+	ID               uuid.UUID
+	UserID           uuid.UUID
+	Source           string
+	ExternalID       string
+	SportType        string
+	Title            string
+	WhenLabel        string
+	DistKm           float64
+	DistanceMeters   float64
+	Duration         string
+	Pace             string
+	MovingSeconds    int
+	ElapsedSeconds   int
+	HR               int
+	AverageHeartrate int
+	MaxHeartrate     int
+	ElevationGain    float64
+	Kudos            int
+	Comments         int
+	Visibility       string
+	Polyline         string
+	RouteSVG         string
+	StartX           float64
+	StartY           float64
+	EndX             float64
+	EndY             float64
+	StartedAt        *time.Time
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
 }
 
 func NewActivity(
@@ -34,23 +47,47 @@ func NewActivity(
 	routeSVG string,
 	startX, startY, endX, endY float64,
 ) *Activity {
+	now := time.Now().UTC()
 	return &Activity{
-		ID:        uuid.New(),
-		UserID:    userID,
-		Title:     title,
-		WhenLabel: whenLabel,
-		DistKm:    distKm,
-		Duration:  duration,
-		Pace:      pace,
-		HR:        hr,
-		Kudos:     kudos,
-		Comments:  comments,
-		RouteSVG:  routeSVG,
-		StartX:    startX,
-		StartY:    startY,
-		EndX:      endX,
-		EndY:      endY,
-		CreatedAt: time.Now().UTC(),
+		ID:             uuid.New(),
+		UserID:         userID,
+		Title:          title,
+		WhenLabel:      whenLabel,
+		DistKm:         distKm,
+		DistanceMeters: distKm * 1000,
+		Duration:       duration,
+		Pace:           pace,
+		HR:             hr,
+		Kudos:          kudos,
+		Comments:       comments,
+		RouteSVG:       routeSVG,
+		StartX:         startX,
+		StartY:         startY,
+		EndX:           endX,
+		EndY:           endY,
+		CreatedAt:      now,
+		UpdatedAt:      now,
+	}
+}
+
+type ActivityStream struct {
+	ID         uuid.UUID
+	ActivityID uuid.UUID
+	Type       string
+	DataJSON   string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
+func NewActivityStream(activityID uuid.UUID, streamType, dataJSON string) *ActivityStream {
+	now := time.Now().UTC()
+	return &ActivityStream{
+		ID:         uuid.New(),
+		ActivityID: activityID,
+		Type:       streamType,
+		DataJSON:   dataJSON,
+		CreatedAt:  now,
+		UpdatedAt:  now,
 	}
 }
 
