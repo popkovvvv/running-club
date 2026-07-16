@@ -19,6 +19,7 @@ type (
 	activityRepo interface {
 		FindByUser(ctx context.Context, userID uuid.UUID) ([]*model.Activity, error)
 		GetByID(ctx context.Context, id uuid.UUID) (*model.Activity, error)
+		Update(ctx context.Context, a *model.Activity) error
 		FindPRs(ctx context.Context, userID uuid.UUID) ([]*model.PR, error)
 		FindRaces(ctx context.Context, userID uuid.UUID) ([]*model.Race, error)
 	}

@@ -88,6 +88,7 @@ func New(h Handlers) http.Handler {
 
 			priv.Get("/activities", h.Activity.List)
 			priv.Get("/activities/{id}", h.Activity.Get)
+			priv.Patch("/activities/{id}", h.Activity.Update)
 			priv.Get("/activities/{id}/streams", h.Activity.Streams)
 			priv.Get("/progress", h.Activity.Progress)
 			priv.Get("/prs", h.Activity.PRs)

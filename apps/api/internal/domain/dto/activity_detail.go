@@ -39,6 +39,16 @@ type ActivityStreamView struct {
 	Data string `json:"data"`
 }
 
+type UpdateActivityRequest struct {
+	Title         *string  `json:"title"`
+	When          *string  `json:"when"`
+	DistKm        *float64 `json:"distKm"`
+	Duration      *string  `json:"duration"`
+	Pace          *string  `json:"pace"`
+	HR            *int     `json:"hr"`
+	ElevationGain *float64 `json:"elevationGain"`
+}
+
 func NewActivityDetailView(
 	id uuid.UUID,
 	title, when string,

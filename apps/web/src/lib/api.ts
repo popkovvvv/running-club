@@ -242,6 +242,8 @@ export const api = {
   deleteWorkout: (id: string) => request<{ status: string }>(`/workouts/${id}`, { method: 'DELETE' }),
   activities: () => request<Activity[]>('/activities'),
   activity: (id: string) => request<ActivityDetail>(`/activities/${id}`),
+  updateActivity: (id: string, body: Record<string, unknown>) =>
+    request<ActivityDetail>(`/activities/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
   activityStreams: (id: string) => request<ActivityStream[]>(`/activities/${id}/streams`),
   stravaIntegration: () => request<IntegrationStatus>('/integrations/strava'),
   connectStrava: () => request<{ url: string }>('/integrations/strava/connect'),

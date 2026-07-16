@@ -36,7 +36,7 @@ func Error(w http.ResponseWriter, err error) {
 		status, code = http.StatusConflict, "conflict"
 	case errors.Is(err, model.ErrWeakPassword), errors.Is(err, model.ErrInvalidInviteCode),
 		errors.Is(err, model.ErrInvalidRole), errors.Is(err, model.ErrNotMember),
-		errors.Is(err, model.ErrNotSignedUp):
+		errors.Is(err, model.ErrNotSignedUp), errors.Is(err, model.ErrBadRequest):
 		status, code = http.StatusBadRequest, "bad_request"
 	}
 

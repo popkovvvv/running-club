@@ -16,4 +16,5 @@ var (
 	ErrInvalidRole        = errors.New("invalid role")
 	ErrAlreadySignedUp    = errors.New("already signed up")
 	ErrNotSignedUp        = errors.New("not signed up")
+	ErrBadRequest         = errors.New("bad request")
 )

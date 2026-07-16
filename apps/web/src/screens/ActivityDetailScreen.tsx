@@ -3,20 +3,27 @@ import { api, type ActivityDetail, type ActivityStream } from '../lib/api'
 import { useApp } from '../lib/store'
 import { ActivityMap } from '../components/activity/ActivityMap'
 import { ActivityTabs } from '../components/activity/ActivityTabs'
+import { ActivityEditForm } from '../components/activity/ActivityEditForm'
 import { MetricGrid } from '../components/activity/MetricGrid'
 import { SplitTable, StreamChart, computeSplits, parseStreamValues } from '../components/activity/StreamChart'
 import { LeafletMap } from '../components/activity/LeafletMap'
 
 export function ActivityDetailScreen({ id }: { id: string }) {
-  const { theme, closeOverlay } = useApp()
+  const { theme, closeOverlay, reloadActivities } = useApp()
   const [activity, setActivity] = useState<ActivityDetail | null>(null)
   const [streams, setStreams] = useState<ActivityStream[]>([])
   const [tab, setTab] = useState('overview')
+  const [editing, setEditing] = useState(false)
+  const [phoneEl, setPhoneEl] = useState<HTMLElement | null>(null)
 
   useEffect(() => {
     void api.activity(id).then(setActivity).catch(() => setActivity(null))
     void api.activityStreams(id).then(setStreams).catch(() => setStreams([]))
   }, [id])
+
+  useEffect(() => {
+    setPhoneEl(document.querySelector('.phone'))
+  }, [])
 
   if (!activity) {
     return <div className="card" style={{ color: theme.dim }}>Загрузка…</div>
@@ -44,6 +51,14 @@ export function ActivityDetailScreen({ id }: { id: string }) {
         <div style={{ fontWeight: 700, fontSize: 18 }}>{activity.title}</div>
         <div style={{ fontSize: 11, color: theme.dim }}>{activity.when}{activity.source ? ` · ${activity.source}` : ''}</div>
       </div>
+      <button
+        data-testid="edit-activity"
+        className="btn"
+        onClick={() => setEditing(true)}
+        style={{ background: theme.card2, color: theme.accent, borderRadius: 12, padding: 12 }}
+      >
+        Редактировать
+      </button>
       <ActivityTabs theme={theme} tab={tab} tabs={tabs} onChange={setTab} />
 
       {tab === 'overview' && (
@@ -89,6 +104,20 @@ export function ActivityDetailScreen({ id }: { id: string }) {
         <div className="card">
           <StreamChart values={cadenceStream ? parseStreamValues(cadenceStream.data) : []} color="#b4ff6e" label="Каденс" />
         </div>
+      )}
+
+      {editing && phoneEl && (
+        <ActivityEditForm
+          theme={theme}
+          activity={activity}
+          phoneEl={phoneEl}
+          onClose={() => setEditing(false)}
+          onSave={async (body) => {
+            const updated = await api.updateActivity(id, body)
+            setActivity(updated)
+            await reloadActivities()
+          }}
+        />
       )}
     </div>
   )

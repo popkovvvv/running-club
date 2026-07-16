@@ -39,7 +39,14 @@ export function WorkoutDetailScreen({ id }: { id: string }) {
       ))}
 
       {workout.fact ? (
-        <WorkoutFactPanel theme={theme} activity={workout.fact} />
+        <WorkoutFactPanel
+          theme={theme}
+          activity={workout.fact}
+          onUpdated={(fact) => {
+            setWorkout({ ...workout, fact })
+            void reloadActivities()
+          }}
+        />
       ) : (
         <div className="card" style={{ fontSize: 13, color: theme.dim }}>Ещё нет данных по активности</div>
       )}

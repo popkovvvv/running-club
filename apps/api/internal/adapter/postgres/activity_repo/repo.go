@@ -290,6 +290,35 @@ func (r *Repo) GetByID(ctx context.Context, id uuid.UUID) (*model.Activity, erro
 	return activity, nil
 }
 
+func (r *Repo) Update(ctx context.Context, a *model.Activity) error {
+	tag, err := r.pool.Exec(ctx, `
+		UPDATE activities SET
+			title=$2,
+			when_label=$3,
+			dist_km=$4,
+			distance_meters=$5,
+			duration=$6,
+			pace=$7,
+			moving_seconds=$8,
+			elapsed_seconds=$9,
+			hr=$10,
+			average_heartrate=$11,
+			elevation_gain=$12,
+			started_at=$13,
+			updated_at=$14
+		WHERE id=$1`,
+		a.ID, a.Title, a.WhenLabel, a.DistKm, a.DistanceMeters,
+		a.Duration, a.Pace, a.MovingSeconds, a.ElapsedSeconds,
+		a.HR, a.AverageHeartrate, a.ElevationGain, a.StartedAt, a.UpdatedAt)
+	if err != nil {
+		return fmt.Errorf("exec: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		return model.ErrNotFound
+	}
+	return nil
+}
+
 func (r *Repo) SumDistByUserSince(ctx context.Context, userID uuid.UUID, since time.Time) (float64, error) {
 	var sum float64
 	err := r.pool.QueryRow(ctx, `
