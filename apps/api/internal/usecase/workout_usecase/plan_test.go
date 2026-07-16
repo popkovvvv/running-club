@@ -172,6 +172,7 @@ func TestPlanMonth(t *testing.T) {
 
 	m := newMocks(t)
 	m.workoutRepo.EXPECT().FindByUser(mock.Anything, uid).Return([]*model.Workout{planW, ownW, other}, nil).Once()
+	m.membershipRepo.EXPECT().GetActiveByUser(mock.Anything, uid).Return(nil, model.ErrNotFound).Once()
 	m.activityRepo.EXPECT().SumDistByUserSince(mock.Anything, uid, mock.Anything).Return(3.0, nil).Once()
 
 	uc := workout_usecase.NewUseCase(m.workoutRepo, m.planWeekRepo, m.membershipRepo, m.clubRepo, m.activityRepo)
@@ -179,8 +180,9 @@ func TestPlanMonth(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, res.Days, 1)
 	require.Len(t, res.Mine, 1)
-	require.Equal(t, "17 км", res.WeekPlan)
+	require.Equal(t, "", res.WeekPlan)
 	require.Equal(t, "3.0", res.WeekKm)
+	require.NotEmpty(t, res.WeekRange)
 }
 
 func defaultRangeForWeek(weekIndex int) string {

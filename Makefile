@@ -1,6 +1,6 @@
 include .mk/migrate.mk
 
-.PHONY: up down seed mock test-unit test-e2e test-web test-web-e2e test
+.PHONY: up down seed mock test-unit test-integration test-e2e test-web test-web-e2e test
 
 COMPOSE ?= podman compose
 
@@ -18,6 +18,9 @@ mock:
 
 test-unit:
 	cd apps/api && go test -tags=unit ./...
+
+test-integration:
+	cd apps/api && go test -tags=integration ./internal/adapter/postgres/... -count=1
 
 test-e2e:
 	cd apps/api && go test -tags=e2e ./tests/e2e/... -count=1

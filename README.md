@@ -64,9 +64,20 @@ legacy/    — исходный .dc.html прототип
 
 ## Vercel
 
-1. Импортируйте репозиторий
-2. Env: `DATABASE_URL` (Neon), `JWT_SECRET`
-3. Build: из `vercel.json` (web dist + Go function `apps/api/api`)
+Один проект, два сервиса (раздельно собираются):
+
+| Service | Root | Runtime |
+|---|---|---|
+| `web` | `apps/web` | Vite (static) |
+| `api` | `apps/api` | Go (`cmd/api`, слушает `PORT`) |
+
+1. Импортируйте репозиторий (Root Directory = корень репо)
+2. Env: `DATABASE_URL` (Neon), `JWT_SECRET`, при необходимости Strava
+3. Роутинг: `/api/*` → api, остальное → web (см. `vercel.json`)
+
+Нужен доступ к **Vercel Services** в аккаунте/плане. Локально: `vercel dev` из корня.
+
+Если Services недоступны — напишите, сделаем fallback на классический `api/index.go` + отдельный build web.
 
 ## Что закрыто из прототипа
 

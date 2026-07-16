@@ -1,0 +1,3 @@
+# Root Go module was only for the legacy single-function Vercel entrypoint (api/index.go).
+# Deploy now uses Vercel Services: apps/api (Go) + apps/web (Vite). See vercel.json.
+api/index.go

@@ -24,6 +24,9 @@ type PlanDayView struct {
 	ActivityID    string  `json:"activityId,omitempty"`
 	ActivityWhen  string  `json:"activityWhen,omitempty"`
 	ActivityPace  string  `json:"activityPace,omitempty"`
+	RPE           *int    `json:"rpe,omitempty"`
+	AthleteReport string  `json:"athleteReport,omitempty"`
+	CoachComment  string  `json:"coachComment,omitempty"`
 }
 
 func NewStudentDetailView(
@@ -53,6 +56,8 @@ func NewPlanDayView(
 	plannedKm, actualKm float64,
 	status, scheduledDate string,
 	activityID, activityWhen, activityPace string,
+	rpe *int,
+	athleteReport, coachComment string,
 ) PlanDayView {
 	return PlanDayView{
 		WorkoutID:     workoutID,
@@ -66,5 +71,8 @@ func NewPlanDayView(
 		ActivityID:    activityID,
 		ActivityWhen:  activityWhen,
 		ActivityPace:  activityPace,
+		RPE:           rpe,
+		AthleteReport: athleteReport,
+		CoachComment:  coachComment,
 	}
 }

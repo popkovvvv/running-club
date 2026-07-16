@@ -33,6 +33,9 @@ type Workout struct {
 	AssignedBy          *uuid.UUID
 	IsClubTemplate      bool
 	AnnounceID          *uuid.UUID
+	RPE                 *int
+	AthleteReport       string
+	CoachComment        string
 	CreatedAt           time.Time
 	Segments            []Segment
 }

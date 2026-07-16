@@ -24,6 +24,9 @@ type CreateWorkoutRequest struct {
 type UpdateWorkoutRequest struct {
 	Status              *string    `json:"status"`
 	CompletedActivityID *uuid.UUID `json:"completedActivityId"`
+	RPE                 *int       `json:"rpe"`
+	AthleteReport       *string    `json:"athleteReport"`
+	CoachComment        *string    `json:"coachComment"`
 }
 
 type SegmentInput struct {
@@ -34,26 +37,29 @@ type SegmentInput struct {
 }
 
 type WorkoutView struct {
-	ID                  uuid.UUID            `json:"id"`
-	Kind                string               `json:"kind"`
-	WorkoutType         string               `json:"workoutType"`
-	DayLabel            string               `json:"dayLabel"`
-	Tag                 string               `json:"tag"`
-	Title               string               `json:"title"`
-	Description         string               `json:"description,omitempty"`
-	DistKm              float64              `json:"distKm"`
-	HR                  string               `json:"hr"`
-	WeekIndex           int                  `json:"weekIndex"`
-	ScheduledDate       *string              `json:"scheduledDate,omitempty"`
-	Status              string               `json:"status"`
-	CompletedActivityID *uuid.UUID           `json:"completedActivityId,omitempty"`
-	AssignedBy          *uuid.UUID           `json:"assignedBy,omitempty"`
-	IsClubTemplate      bool                 `json:"isClubTemplate"`
-	Segments            []SegmentView        `json:"segments,omitempty"`
-	PlannedKm           float64              `json:"plannedKm"`
-	ActualKm            *float64             `json:"actualKm,omitempty"`
-	ActualPace          string               `json:"actualPace,omitempty"`
-	Fact                *ActivityDetailView  `json:"fact,omitempty"`
+	ID                  uuid.UUID           `json:"id"`
+	Kind                string              `json:"kind"`
+	WorkoutType         string              `json:"workoutType"`
+	DayLabel            string              `json:"dayLabel"`
+	Tag                 string              `json:"tag"`
+	Title               string              `json:"title"`
+	Description         string              `json:"description,omitempty"`
+	DistKm              float64             `json:"distKm"`
+	HR                  string              `json:"hr"`
+	WeekIndex           int                 `json:"weekIndex"`
+	ScheduledDate       *string             `json:"scheduledDate,omitempty"`
+	Status              string              `json:"status"`
+	CompletedActivityID *uuid.UUID          `json:"completedActivityId,omitempty"`
+	AssignedBy          *uuid.UUID          `json:"assignedBy,omitempty"`
+	IsClubTemplate      bool                `json:"isClubTemplate"`
+	Segments            []SegmentView       `json:"segments,omitempty"`
+	PlannedKm           float64             `json:"plannedKm"`
+	ActualKm            *float64            `json:"actualKm,omitempty"`
+	ActualPace          string              `json:"actualPace,omitempty"`
+	RPE                 *int                `json:"rpe,omitempty"`
+	AthleteReport       string              `json:"athleteReport,omitempty"`
+	CoachComment        string              `json:"coachComment,omitempty"`
+	Fact                *ActivityDetailView `json:"fact,omitempty"`
 }
 
 func NewWorkoutView(

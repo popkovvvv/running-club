@@ -41,13 +41,54 @@ func (u *UseCase) planMonth(ctx context.Context, userID uuid.UUID, year, month i
 		}
 	}
 
+	weekRange, weekPlan, err := u.currentWeekMeta(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
 	weekKm, err := u.activityRepo.SumDistByUserSince(ctx, userID, startOfWeek(time.Now().UTC()))
 	if err != nil {
 		return nil, fmt.Errorf("activityRepo.SumDistByUserSince: %w", err)
 	}
 
-	weekPlan := planVolumeLabel(days, mine)
-	return dto.NewPlanResponse(0, "", weekPlan, formatKm(weekKm), mapWorkouts(days), mapWorkouts(mine)), nil
+	return dto.NewPlanResponse(0, weekRange, weekPlan, formatKm(weekKm), mapWorkouts(days), mapWorkouts(mine)), nil
+}
+
+func (u *UseCase) currentWeekMeta(ctx context.Context, userID uuid.UUID) (weekRange, weekPlan string, err error) {
+	_, isoWeek := time.Now().UTC().ISOWeek()
+	membership, err := u.membershipRepo.GetActiveByUser(ctx, userID)
+	if err != nil {
+		if !errors.Is(err, model.ErrNotFound) {
+			return "", "", fmt.Errorf("membershipRepo.GetActiveByUser: %w", err)
+		}
+		return defaultWeekRange(0, time.Now().UTC()), "", nil
+	}
+	weeks, err := u.planWeekRepo.FindByClub(ctx, membership.ClubID)
+	if err != nil {
+		return "", "", fmt.Errorf("planWeekRepo.FindByClub: %w", err)
+	}
+	for _, pw := range weeks {
+		if pw.WeekIndex == isoWeek {
+			weekRange = pw.RangeLabel
+			weekPlan = pw.PlanLabel
+			break
+		}
+	}
+	if weekRange == "" {
+		weekRange = defaultWeekRange(0, time.Now().UTC())
+	}
+	if weekPlan == "" {
+		planDays, err := u.workoutRepo.FindByUserWeek(ctx, userID, isoWeek, model.WorkoutPlan)
+		if err != nil {
+			return "", "", fmt.Errorf("workoutRepo.FindByUserWeek: %w", err)
+		}
+		ownDays, err := u.workoutRepo.FindByUserWeek(ctx, userID, isoWeek, model.WorkoutOwn)
+		if err != nil {
+			return "", "", fmt.Errorf("workoutRepo.FindByUserWeek: %w", err)
+		}
+		weekPlan = planVolumeLabel(planDays, ownDays)
+	}
+	return weekRange, weekPlan, nil
 }
 
 func (u *UseCase) planWeek(ctx context.Context, userID uuid.UUID, week int) (*dto.PlanResponse, error) {

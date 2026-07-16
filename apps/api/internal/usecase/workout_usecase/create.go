@@ -67,27 +67,54 @@ func (u *UseCase) Get(ctx context.Context, actorID uuid.UUID, id uuid.UUID) (*dt
 	return &v, nil
 }
 
-func (u *UseCase) Update(ctx context.Context, actorID uuid.UUID, id uuid.UUID, req dto.UpdateWorkoutRequest) (*dto.WorkoutView, error) {
+func (u *UseCase) Update(ctx context.Context, actorID uuid.UUID, role model.Role, id uuid.UUID, req dto.UpdateWorkoutRequest) (*dto.WorkoutView, error) {
 	w, err := u.workoutRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("workoutRepo.GetByID: %w", err)
 	}
-	if w.UserID != actorID {
-		return nil, fmt.Errorf("access denied: %w", model.ErrForbidden)
-	}
-	if req.Status != nil {
-		w.Status = model.WorkoutStatus(*req.Status)
-	}
-	if req.CompletedActivityID != nil {
-		w.CompletedActivityID = req.CompletedActivityID
-	}
-	if w.Status == model.WorkoutStatusCompleted && w.CompletedActivityID == nil {
-		activity := activityFromWorkout(w)
-		if err := u.activityRepo.Create(ctx, activity); err != nil {
-			return nil, fmt.Errorf("activityRepo.Create: %w", err)
+
+	if role == model.RoleCoach {
+		if err := u.ensureWorkoutAccess(ctx, actorID, w.UserID); err != nil {
+			return nil, err
 		}
-		w.CompletedActivityID = &activity.ID
+		if req.CoachComment == nil {
+			return nil, fmt.Errorf("coach comment required: %w", model.ErrBadRequest)
+		}
+		if req.Status != nil || req.CompletedActivityID != nil || req.RPE != nil || req.AthleteReport != nil {
+			return nil, fmt.Errorf("coach can only update comment: %w", model.ErrForbidden)
+		}
+		w.CoachComment = *req.CoachComment
+	} else {
+		if w.UserID != actorID {
+			return nil, fmt.Errorf("access denied: %w", model.ErrForbidden)
+		}
+		if req.CoachComment != nil {
+			return nil, fmt.Errorf("athlete cannot set coach comment: %w", model.ErrForbidden)
+		}
+		if req.RPE != nil {
+			if *req.RPE < 1 || *req.RPE > 10 {
+				return nil, fmt.Errorf("rpe must be 1-10: %w", model.ErrBadRequest)
+			}
+			w.RPE = req.RPE
+		}
+		if req.AthleteReport != nil {
+			w.AthleteReport = *req.AthleteReport
+		}
+		if req.Status != nil {
+			w.Status = model.WorkoutStatus(*req.Status)
+		}
+		if req.CompletedActivityID != nil {
+			w.CompletedActivityID = req.CompletedActivityID
+		}
+		if w.Status == model.WorkoutStatusCompleted && w.CompletedActivityID == nil {
+			activity := activityFromWorkout(w)
+			if err := u.activityRepo.Create(ctx, activity); err != nil {
+				return nil, fmt.Errorf("activityRepo.Create: %w", err)
+			}
+			w.CompletedActivityID = &activity.ID
+		}
 	}
+
 	if err := u.workoutRepo.Update(ctx, w); err != nil {
 		return nil, fmt.Errorf("workoutRepo.Update: %w", err)
 	}

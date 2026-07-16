@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { AuthGate } from './components/AuthGate'
 import { BottomNav } from './components/BottomNav'
 import { CreateClubGate } from './components/CreateClubGate'
@@ -6,6 +6,7 @@ import { RoleEntry } from './components/RoleEntry'
 import { useApp } from './lib/store'
 import { themeToCssVars } from './lib/theme'
 import { ActivityDetailScreen } from './screens/ActivityDetailScreen'
+import { CoachPlanScreen } from './screens/CoachPlanScreen'
 import { HomeAthlete } from './screens/HomeAthlete'
 import { HomeCoach } from './screens/HomeCoach'
 import { PlanScreen } from './screens/PlanScreen'
@@ -30,10 +31,6 @@ export default function App() {
   const isCoach = user?.role === 'coach'
 
   const vars = themeToCssVars(theme) as CSSProperties
-
-  useEffect(() => {
-    if (isCoach && screen === 'plan') setScreen('home')
-  }, [isCoach, screen, setScreen])
 
   if (loading) {
     return <div className="phone" style={vars}><div style={{ margin: 'auto', color: theme.dim }}>Загрузка…</div></div>
@@ -67,7 +64,7 @@ export default function App() {
     <>
       {screen === 'home' && (isCoach ? <HomeCoach /> : <HomeAthlete />)}
       {screen === 'schedule' && <ScheduleScreen />}
-      {screen === 'plan' && !isCoach && <PlanScreen />}
+      {screen === 'plan' && (isCoach ? <CoachPlanScreen /> : <PlanScreen />)}
       {screen === 'prog' && <ProgressScreen />}
       {screen === 'profile' && (isCoach ? <ProfileCoach /> : <ProfileAthlete />)}
     </>

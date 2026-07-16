@@ -184,9 +184,14 @@ export function StudentProfileScreen({ id }: { id: string }) {
       <button className="btn" onClick={closeOverlay} style={{ alignSelf: 'flex-start', background: theme.card2, color: theme.dim, borderRadius: 10, padding: '8px 12px' }}>← Назад</button>
       <div className="card" style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
         <div style={{ width: 52, height: 52, borderRadius: '50%', background: theme.card2, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.accent, fontWeight: 800, fontSize: 18 }}>{detail.student.init}</div>
-        <div>
+        <div style={{ flex: 1 }}>
           <div style={{ fontWeight: 800, fontSize: 18 }}>{detail.student.name}</div>
-          <div style={{ fontSize: 12, color: theme.dim }}>{detail.weekKm} / {detail.weekPlanKm} км · {detail.comp}%</div>
+          <div style={{ fontSize: 12, color: theme.dim, marginTop: 2 }}>Неделя</div>
+          <div style={{ fontFamily: theme.display, fontWeight: 800, fontSize: 22, marginTop: 2 }}>
+            {detail.weekKm}
+            <span style={{ fontSize: 14, color: theme.dim, fontWeight: 700 }}> / {detail.weekPlanKm} км</span>
+            <span style={{ fontSize: 13, color: theme.accent, marginLeft: 8 }}>{detail.comp}%</span>
+          </div>
         </div>
       </div>
 
@@ -248,10 +253,16 @@ export function StudentProfileScreen({ id }: { id: string }) {
               </div>
             </div>
           </div>
-          {d.activityWhen && (
+          {(d.activityWhen || d.rpe != null) && (
             <div style={{ marginTop: 8, fontSize: 12, color: theme.dim }}>
-              {d.activityWhen}{d.activityPace ? ` · ${d.activityPace}` : ''}
+              {[d.activityWhen, d.activityPace, d.rpe != null ? `RPE ${d.rpe}` : null].filter(Boolean).join(' · ')}
             </div>
+          )}
+          {d.athleteReport && (
+            <div style={{ marginTop: 6, fontSize: 12, color: theme.text }}>{d.athleteReport}</div>
+          )}
+          {d.coachComment && (
+            <div style={{ marginTop: 4, fontSize: 12, color: theme.accent }}>Тренер: {d.coachComment}</div>
           )}
         </div>
       ))}

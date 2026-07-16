@@ -225,6 +225,7 @@ func mapPlanDay(ctx context.Context, activityRepo activityRepo, w *model.Workout
 	return dto.NewPlanDayView(
 		w.ID.String(), w.DayLabel, w.Title, string(w.WorkoutType), w.DistKm, actualKm, string(w.Status),
 		scheduled, activityID, activityWhen, activityPace,
+		w.RPE, w.AthleteReport, w.CoachComment,
 	)
 }
 

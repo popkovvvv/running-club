@@ -27,6 +27,9 @@ export function WorkoutCard({ theme, workout, onClick }: {
         </div>
       </div>
       <div style={{ fontWeight: 700, marginTop: 8 }}>{workout.title}</div>
+      {workout.rpe != null && (
+        <div style={{ marginTop: 6, fontSize: 11, color: theme.dim }}>RPE {workout.rpe}{workout.athleteReport ? ` · ${workout.athleteReport}` : ''}</div>
+      )}
       {workout.segments && workout.segments.length > 0 && (
         <div style={{ marginTop: 8, fontSize: 11, color: theme.dim }}>
           {workout.segments.length} сегментов · {workout.segments.map((s) => s.title).join(', ')}

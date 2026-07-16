@@ -17,7 +17,7 @@ type useCase interface {
 	Plan(ctx context.Context, userID uuid.UUID, week, year, month int) (*dto.PlanResponse, error)
 	Create(ctx context.Context, actorID uuid.UUID, role model.Role, req dto.CreateWorkoutRequest) (*dto.WorkoutView, error)
 	Get(ctx context.Context, actorID uuid.UUID, id uuid.UUID) (*dto.WorkoutView, error)
-	Update(ctx context.Context, actorID uuid.UUID, id uuid.UUID, req dto.UpdateWorkoutRequest) (*dto.WorkoutView, error)
+	Update(ctx context.Context, actorID uuid.UUID, role model.Role, id uuid.UUID, req dto.UpdateWorkoutRequest) (*dto.WorkoutView, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 }
 
@@ -81,7 +81,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		response.JSON(w, http.StatusBadRequest, response.ErrorBody{Error: err.Error(), Code: "bad_request"})
 		return
 	}
-	res, err := h.uc.Update(r.Context(), middleware.UserID(r.Context()), id, req)
+	res, err := h.uc.Update(r.Context(), middleware.UserID(r.Context()), model.Role(middleware.Role(r.Context())), id, req)
 	if err != nil {
 		response.Error(w, err)
 		return

@@ -42,7 +42,7 @@ export function BottomNav() {
   const { user, screen, setScreen } = useApp()
   const isCoach = user?.role === 'coach'
   const tabLabels = labels(isCoach)
-  const tabs: Tab[] = isCoach ? ['home', 'prog', 'profile'] : ['home', 'plan', 'prog', 'profile']
+  const tabs: Tab[] = ['home', 'plan', 'prog', 'profile']
   const active: Tab | null = tabs.includes(screen as Tab) ? (screen as Tab) : null
 
   return (

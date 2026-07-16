@@ -174,6 +174,17 @@ export function PlanScreen() {
 
   return (
     <div className="fade" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {(plan?.weekPlan || plan?.weekKm) && (
+        <div className="card" data-testid="week-volume">
+          <div style={{ fontSize: 11, color: theme.dim, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            Объём недели{plan.weekRange ? ` · ${plan.weekRange}` : ''}
+          </div>
+          <div style={{ fontFamily: theme.display, fontWeight: 800, fontSize: 28, marginTop: 6 }}>
+            {plan.weekKm || '0'}
+            {plan.weekPlan ? <span style={{ fontSize: 16, color: theme.dim, fontWeight: 700 }}> / {plan.weekPlan}</span> : <span style={{ fontSize: 16, color: theme.dim }}> км</span>}
+          </div>
+        </div>
+      )}
       <ScheduleCalendar
         theme={theme}
         label={`${MONTH_LABELS[month - 1]} ${year}`}

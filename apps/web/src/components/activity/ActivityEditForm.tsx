@@ -70,13 +70,16 @@ export function ActivityEditForm({
 }) {
   const [values, setValues] = useState(() => fromActivity(activity))
   const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
 
   const set = (key: keyof ActivityEditValues, value: string) => {
     setValues((v) => ({ ...v, [key]: value }))
+    setSaved(false)
   }
 
   const submit = async () => {
     setSaving(true)
+    setSaved(false)
     try {
       const body: Record<string, unknown> = {
         title: values.title.trim(),
@@ -91,7 +94,7 @@ export function ActivityEditForm({
       const elev = parseFloat(values.elevationGain.replace(',', '.'))
       if (!Number.isNaN(elev)) body.elevationGain = elev
       await onSave(body)
-      onClose()
+      setSaved(true)
     } finally {
       setSaving(false)
     }
@@ -147,7 +150,10 @@ export function ActivityEditForm({
               theme={theme}
               value={values.when}
               dayLabel={values.dayLabel}
-              onChange={(iso, dayLabel) => setValues((v) => ({ ...v, when: iso, dayLabel }))}
+              onChange={(iso, dayLabel) => {
+                setValues((v) => ({ ...v, when: iso, dayLabel }))
+                setSaved(false)
+              }}
             />
           </div>
           {field('Дистанция, км', 'distKm', { placeholder: '10.5' })}
@@ -163,10 +169,15 @@ export function ActivityEditForm({
           onClick={() => void submit()}
           style={{ width: '100%', marginTop: 14, background: theme.accent, color: theme.onAccent, borderRadius: 14, padding: 14, opacity: saving ? 0.6 : 1 }}
         >
-          Сохранить
+          {saving ? 'Сохранение…' : saved ? 'Сохранено' : 'Сохранить'}
         </button>
+        {saved && (
+          <div data-testid="activity-edit-saved" style={{ marginTop: 8, textAlign: 'center', fontSize: 13, fontWeight: 700, color: theme.accent }}>
+            Изменения сохранены
+          </div>
+        )}
         <button className="btn" onClick={onClose} style={{ width: '100%', marginTop: 8, background: theme.card2, color: theme.dim, borderRadius: 14, padding: 12 }}>
-          Отмена
+          {saved ? 'Закрыть' : 'Отмена'}
         </button>
       </div>
     </div>,

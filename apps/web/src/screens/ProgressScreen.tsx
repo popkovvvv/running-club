@@ -17,12 +17,19 @@ export function ProgressScreen() {
     summary?: PeriodSummary
   } | null>(null)
   const [analytics, setAnalytics] = useState<Awaited<ReturnType<typeof api.analytics>> | null>(null)
+  const [races, setRaces] = useState<Awaited<ReturnType<typeof api.races>>>([])
+  const [prs, setPrs] = useState<Awaited<ReturnType<typeof api.prs>>>([])
   const [period, setPeriod] = useState<PeriodKey>('week')
   const isCoach = user?.role === 'coach'
 
   useEffect(() => {
-    if (isCoach) void api.analytics().then(setAnalytics).catch(() => setAnalytics(null))
-    else void api.progress().then(setProgress).catch(() => setProgress(null))
+    if (isCoach) {
+      void api.analytics().then(setAnalytics).catch(() => setAnalytics(null))
+      return
+    }
+    void api.progress().then(setProgress).catch(() => setProgress(null))
+    void api.races().then(setRaces).catch(() => setRaces([]))
+    void api.prs().then(setPrs).catch(() => setPrs([]))
   }, [isCoach, tabEpoch])
 
   if (isCoach) {
@@ -69,6 +76,36 @@ export function ProgressScreen() {
           км · {progress?.yearTr ?? '—'} трен. · {progress?.yearStarts ?? '—'} старта
         </div>
       </HeroPanel>
+
+      <div className="display-title" style={{ fontSize: 18 }}>Старты</div>
+      {races.length === 0 && (
+        <div className="card" style={{ fontSize: 13, color: theme.dim }}>Нет ближайших стартов</div>
+      )}
+      {races.map((r) => (
+        <div key={`${r.name}-${r.date}`} className="card" data-testid="race-card" style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+          <div>
+            <div style={{ fontWeight: 700 }}>{r.name}</div>
+            <div style={{ fontSize: 12, color: theme.dim, marginTop: 4 }}>{r.date} · {r.dist}</div>
+            {r.goal && <div style={{ fontSize: 12, color: theme.accent, marginTop: 4 }}>{r.goal}</div>}
+          </div>
+          <AccentPill style={{ alignSelf: 'flex-start' }}>{r.days} дн.</AccentPill>
+        </div>
+      ))}
+
+      <div className="display-title" style={{ fontSize: 18 }}>Личные рекорды</div>
+      {prs.length === 0 && (
+        <div className="card" style={{ fontSize: 13, color: theme.dim }}>Пока нет рекордов</div>
+      )}
+      {prs.map((pr) => (
+        <div key={`${pr.d}-${pr.t}`} className="card" data-testid="pr-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 18 }}>{pr.d}</div>
+            <div style={{ fontSize: 12, color: theme.dim }}>{pr.date}</div>
+          </div>
+          <div style={{ fontFamily: theme.display, fontWeight: 800, fontSize: 20, color: theme.accent }}>{pr.t}</div>
+        </div>
+      ))}
+
       {(progress?.months?.length ?? 0) === 0 && (
         <div className="card" style={{ fontSize: 13, color: theme.dim }}>Нет статистики</div>
       )}

@@ -15,3 +15,5 @@ vendor/
 .vscode/
 .superpowers/
 .worktrees/
+.vercel
+.env*

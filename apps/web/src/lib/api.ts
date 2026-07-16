@@ -89,6 +89,9 @@ export type Workout = {
   plannedKm?: number
   actualKm?: number
   actualPace?: string
+  rpe?: number
+  athleteReport?: string
+  coachComment?: string
   fact?: ActivityDetail
 }
 
@@ -135,6 +138,9 @@ export type StudentDetail = {
     activityId?: string
     activityWhen?: string
     activityPace?: string
+    rpe?: number
+    athleteReport?: string
+    coachComment?: string
   }>
   recentActivities: Activity[]
   summary: PeriodSummary

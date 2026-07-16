@@ -54,12 +54,16 @@ func mapWorkout(w *model.Workout) dto.WorkoutView {
 	if tag == "" {
 		tag = workoutTypeLabel(w.WorkoutType)
 	}
-	return dto.NewWorkoutView(
+	v := dto.NewWorkoutView(
 		w.ID, string(w.Kind), string(w.WorkoutType), w.DayLabel, tag, w.Title, w.Description,
 		w.DistKm, w.HR, w.WeekIndex,
 		dto.FormatDate(w.ScheduledDate), string(w.Status),
 		w.CompletedActivityID, w.AssignedBy, w.IsClubTemplate, segments,
 	)
+	v.RPE = w.RPE
+	v.AthleteReport = w.AthleteReport
+	v.CoachComment = w.CoachComment
+	return v
 }
 
 func (u *UseCase) mapWorkoutView(ctx context.Context, w *model.Workout) (dto.WorkoutView, error) {
