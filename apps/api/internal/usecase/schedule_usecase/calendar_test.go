@@ -79,8 +79,8 @@ func TestCalendar(t *testing.T) {
 			if tt.before != nil {
 				tt.before(m)
 			}
-			uc := schedule_usecase.NewUseCase(m.announceRepo, m.clubRepo, m.membershipRepo)
-			res, err := uc.Calendar(context.Background(), tt.userID, tt.role)
+			uc := schedule_usecase.NewUseCase(m.announceRepo, m.clubRepo, m.membershipRepo, m.workoutRepo)
+			res, err := uc.Calendar(context.Background(), tt.userID, tt.role, 0, 0)
 			require.NoError(t, err)
 			if tt.empty {
 				require.Empty(t, res.Cells)

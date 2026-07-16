@@ -28,8 +28,6 @@ func buildTemplateWorkout(coachID, clubID uuid.UUID, weekIndex int, req dto.Crea
 		Title:          req.Title,
 		Description:    req.Description,
 		DistKm:         distKm,
-		Duration:       req.Duration,
-		Pace:           req.Pace,
 		HR:             req.HR,
 		WeekIndex:      weekIndex,
 		Status:         model.WorkoutStatusPlanned,
@@ -60,7 +58,7 @@ func mapWorkouts(items []*model.Workout) []dto.WorkoutView {
 		}
 		out = append(out, dto.NewWorkoutView(
 			w.ID, string(w.Kind), string(w.WorkoutType), w.DayLabel, tag, w.Title, w.Description,
-			w.DistKm, w.Duration, w.Pace, w.HR, w.WeekIndex,
+			w.DistKm, w.HR, w.WeekIndex,
 			dto.FormatDate(w.ScheduledDate), string(w.Status),
 			w.CompletedActivityID, w.AssignedBy, w.IsClubTemplate, segments,
 		))

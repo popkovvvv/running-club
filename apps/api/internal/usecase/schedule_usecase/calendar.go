@@ -13,11 +13,16 @@ import (
 	"github.com/nikpopkov/running-club/api/internal/domain/model"
 )
 
-func (u *UseCase) Calendar(ctx context.Context, userID uuid.UUID, role string) (*dto.CalendarResponse, error) {
+var monthLabelsRU = [...]string{
+	"", "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+	"Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь",
+}
+
+func (u *UseCase) Calendar(ctx context.Context, userID uuid.UUID, role string, year, month int) (*dto.CalendarResponse, error) {
 	club, err := u.clubFor(ctx, userID, role)
 	if err != nil {
 		if errors.Is(err, model.ErrNotMember) || errors.Is(err, model.ErrNotFound) {
-			return dto.NewCalendarResponse([]dto.CalendarCellView{}), nil
+			return dto.NewCalendarResponse(0, 0, "", []dto.CalendarCellView{}), nil
 		}
 		return nil, err
 	}
@@ -28,21 +33,27 @@ func (u *UseCase) Calendar(ctx context.Context, userID uuid.UUID, role string) (
 	}
 
 	now := time.Now()
+	if year == 0 || month < 1 || month > 12 {
+		year = now.Year()
+		month = int(now.Month())
+	}
+
 	sessionDays := make(map[int]bool)
 	for _, a := range items {
 		if a.StartsOn == nil {
 			continue
 		}
-		if a.StartsOn.Year() == now.Year() && a.StartsOn.Month() == now.Month() {
+		if a.StartsOn.Year() == year && int(a.StartsOn.Month()) == month {
 			sessionDays[a.StartsOn.Day()] = true
 		}
 	}
 
 	accent, onAccent, accentSoft, text := calendarColors(club.AccentHex)
-	today := now.Day()
-	first := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
-	daysInMonth := time.Date(now.Year(), now.Month()+1, 0, 0, 0, 0, 0, now.Location()).Day()
+	first := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+	daysInMonth := time.Date(year, time.Month(month)+1, 0, 0, 0, 0, 0, time.UTC).Day()
 	startDow := (int(first.Weekday()) + 6) % 7
+	isCurrentMonth := year == now.Year() && month == int(now.Month())
+	today := now.Day()
 
 	cells := make([]dto.CalendarCellView, 0, 42)
 	for i := 0; i < startDow; i++ {
@@ -50,16 +61,19 @@ func (u *UseCase) Calendar(ctx context.Context, userID uuid.UUID, role string) (
 	}
 	for d := 1; d <= daysInMonth; d++ {
 		has := sessionDays[d]
+		isToday := isCurrentMonth && d == today
 		bg, fg, dot := "transparent", text, "transparent"
-		if d == today {
+		if isToday {
 			bg, fg = accent, onAccent
 		} else if has {
 			bg = accentSoft
 			dot = accent
 		}
-		cells = append(cells, dto.NewCalendarCell(fmt.Sprintf("d%d", d), d, has, d == today, bg, fg, dot))
+		iso := fmt.Sprintf("%04d-%02d-%02d", year, month, d)
+		cells = append(cells, dto.NewCalendarCell(fmt.Sprintf("d%d", d), d, has, isToday, iso, bg, fg, dot))
 	}
-	return dto.NewCalendarResponse(cells), nil
+	label := fmt.Sprintf("%s %d", monthLabelsRU[month], year)
+	return dto.NewCalendarResponse(year, month, label, cells), nil
 }
 
 func calendarColors(accentHex string) (accent, onAccent, accentSoft, text string) {

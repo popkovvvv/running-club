@@ -3,17 +3,14 @@ import { AuthGate } from './components/AuthGate'
 import { BottomNav } from './components/BottomNav'
 import { CreateClubGate } from './components/CreateClubGate'
 import { RoleEntry } from './components/RoleEntry'
-import { api, type Activity } from './lib/api'
 import { useApp } from './lib/store'
 import { themeToCssVars } from './lib/theme'
 import { ActivityDetailScreen } from './screens/ActivityDetailScreen'
-import { CoachPlanScreen } from './screens/CoachPlanScreen'
 import { HomeAthlete } from './screens/HomeAthlete'
 import { HomeCoach } from './screens/HomeCoach'
 import { PlanScreen } from './screens/PlanScreen'
 import { ProfileAthlete, ProfileCoach } from './screens/ProfileScreen'
 import { ProgressScreen } from './screens/ProgressScreen'
-import { RacesScreen } from './screens/RacesScreen'
 import { ScheduleScreen } from './screens/ScheduleScreen'
 import { StudentProfileScreen } from './screens/StudentProfileScreen'
 import { WorkoutDetailScreen } from './screens/WorkoutDetailScreen'
@@ -30,14 +27,13 @@ function initials(name?: string, isCoach?: boolean) {
 export default function App() {
   const { user, loading, theme, screen, overlay, setScreen } = useApp()
   const [authRole, setAuthRole] = useState<AuthRole | null>(null)
-  const [activities, setActivities] = useState<Activity[]>([])
   const isCoach = user?.role === 'coach'
 
-  useEffect(() => {
-    if (user && !isCoach) void api.activities().then(setActivities).catch(() => setActivities([]))
-  }, [user, isCoach])
-
   const vars = themeToCssVars(theme) as CSSProperties
+
+  useEffect(() => {
+    if (isCoach && screen === 'plan') setScreen('home')
+  }, [isCoach, screen, setScreen])
 
   if (loading) {
     return <div className="phone" style={vars}><div style={{ margin: 'auto', color: theme.dim }}>Загрузка…</div></div>
@@ -69,11 +65,10 @@ export default function App() {
     </>
   ) : (
     <>
-      {screen === 'home' && (isCoach ? <HomeCoach /> : <HomeAthlete activities={activities} />)}
+      {screen === 'home' && (isCoach ? <HomeCoach /> : <HomeAthlete />)}
       {screen === 'schedule' && <ScheduleScreen />}
-      {screen === 'plan' && (isCoach ? <CoachPlanScreen /> : <PlanScreen />)}
+      {screen === 'plan' && !isCoach && <PlanScreen />}
       {screen === 'prog' && <ProgressScreen />}
-      {screen === 'races' && <RacesScreen />}
       {screen === 'profile' && (isCoach ? <ProfileCoach /> : <ProfileAthlete />)}
     </>
   )
@@ -86,12 +81,12 @@ export default function App() {
       </div>
       <div style={{ padding: '8px 18px 12px', display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div style={{ fontSize: 10, color: theme.dim, fontWeight: 700, letterSpacing: 1 }}>КЛУБ «{theme.name}»</div>
-            <div style={{ fontFamily: theme.display, fontSize: 22, fontWeight: 800 }}>{isCoach ? 'Кабинет тренера' : 'Личный кабинет'}</div>
+          <div style={{ minWidth: 0, flex: 1, paddingRight: 12 }}>
+            <div className="display-title" style={{ fontSize: 22, color: theme.text }}>{theme.name}</div>
+            <div style={{ fontSize: 12, color: theme.dim, fontWeight: 700, marginTop: 2 }}>{isCoach ? 'Кабинет тренера' : 'Личный кабинет'}</div>
           </div>
           <div
-            style={{ width: 42, height: 42, borderRadius: '50%', background: theme.card2, border: `1.5px solid ${theme.accent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.accent, fontWeight: 800 }}
+            style={{ width: 42, height: 42, flex: 'none', borderRadius: '50%', background: theme.card2, border: `1.5px solid ${theme.accent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.accent, fontWeight: 800 }}
             onClick={() => setScreen('profile')}
           >
             {initials(user.name, isCoach)}

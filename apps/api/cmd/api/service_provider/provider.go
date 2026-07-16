@@ -85,13 +85,13 @@ func (s *ServiceProvider) Handler() http.Handler {
 	stravaClient := strava.NewClient(nil, s.cfg.StravaClientID, s.cfg.StravaClientSecret)
 
 	authUC := auth_usecase.NewUseCase(userRepo, membershipRepo, clubRepo, s.jwt)
-	clubUC := club_usecase.NewUseCase(clubRepo, membershipRepo, userRepo, activityRepo, announceRepo, planWeekRepo)
-	scheduleUC := schedule_usecase.NewUseCase(announceRepo, clubRepo, membershipRepo)
-	workoutUC := workout_usecase.NewUseCase(workoutRepo, planWeekRepo, membershipRepo, clubRepo)
+	clubUC := club_usecase.NewUseCase(clubRepo, membershipRepo, userRepo, activityRepo, announceRepo, planWeekRepo, workoutRepo)
+	scheduleUC := schedule_usecase.NewUseCase(announceRepo, clubRepo, membershipRepo, workoutRepo)
+	workoutUC := workout_usecase.NewUseCase(workoutRepo, planWeekRepo, membershipRepo, clubRepo, activityRepo)
 	planUC := plan_usecase.NewUseCase(planWeekRepo, workoutRepo, clubRepo, userRepo, membershipRepo)
 	activityUC := activity_usecase.NewUseCase(activityRepo, activityStreamRepo, workoutRepo, clubRepo, membershipRepo)
 	studentUC := student_usecase.NewUseCase(clubRepo, userRepo, membershipRepo, activityRepo, workoutRepo, planWeekRepo, announceRepo)
-	analyticsUC := analytics_usecase.NewUseCase(clubRepo, userRepo, activityRepo, announceRepo, planWeekRepo)
+	analyticsUC := analytics_usecase.NewUseCase(clubRepo, userRepo, activityRepo, planWeekRepo, workoutRepo)
 	stravaUC := strava_usecase.NewUseCase(
 		userIntegrationRepo,
 		activityRepo,

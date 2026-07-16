@@ -122,8 +122,6 @@ func cloneForAthlete(src *model.Workout, athleteID, clubID uuid.UUID) *model.Wor
 		Title:         src.Title,
 		Description:   src.Description,
 		DistKm:        src.DistKm,
-		Duration:      src.Duration,
-		Pace:          src.Pace,
 		HR:            src.HR,
 		WeekIndex:     src.WeekIndex,
 		ScheduledDate: src.ScheduledDate,

@@ -31,7 +31,11 @@ func (u *UseCase) List(ctx context.Context, userID uuid.UUID, role string) ([]dt
 				return nil, fmt.Errorf("announceRepo.HasSignup: %w", err)
 			}
 		}
-		out = append(out, toAnnounceView(a, signed))
+		view, err := u.toAnnounceView(ctx, a, signed)
+		if err != nil {
+			return nil, fmt.Errorf("toAnnounceView: %w", err)
+		}
+		out = append(out, view)
 	}
 	return out, nil
 }

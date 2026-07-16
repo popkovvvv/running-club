@@ -43,7 +43,7 @@ func TestDelete(t *testing.T) {
 			if tt.before != nil {
 				tt.before(m)
 			}
-			uc := workout_usecase.NewUseCase(m.workoutRepo, m.planWeekRepo, m.membershipRepo, m.clubRepo)
+			uc := workout_usecase.NewUseCase(m.workoutRepo, m.planWeekRepo, m.membershipRepo, m.clubRepo, m.activityRepo)
 			err := uc.Delete(context.Background(), id)
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

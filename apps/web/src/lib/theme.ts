@@ -15,6 +15,9 @@ export type Theme = {
   accentSoft: string
   good: string
   onAccent: string
+  heroGlow: string
+  halftoneOpacity: string
+  heroImage: string
 }
 
 export const pulseTheme: Theme = {
@@ -22,18 +25,21 @@ export const pulseTheme: Theme = {
   font: 'Manrope',
   display: 'Archivo',
   radius: '20px',
-  bg: '#0c0e10',
-  card: '#16191d',
-  card2: '#1e2228',
-  line: '#2a2f36',
+  bg: '#070b12',
+  card: '#101820',
+  card2: '#16202c',
+  line: '#243040',
   text: '#f4f6f7',
-  dim: '#9aa2ab',
-  faint: '#5c636c',
+  dim: '#8b96a5',
+  faint: '#5a6573',
   accent: '#ff5c22',
   accent2: '#ff7a45',
   accentSoft: 'rgba(255,92,34,.15)',
   good: '#39d98a',
   onAccent: '#ffffff',
+  heroGlow: 'rgba(0, 120, 220, 0.35)',
+  halftoneOpacity: '0.22',
+  heroImage: '',
 }
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -71,6 +77,9 @@ export function themeToCssVars(t: Theme): Record<string, string> {
     '--radius': t.radius,
     '--font': t.font,
     '--display': t.display,
+    '--hero-glow': t.heroGlow,
+    '--halftone-opacity': t.halftoneOpacity,
+    '--hero-image': t.heroImage ? `url(${t.heroImage})` : 'none',
   }
 }
 

@@ -26,7 +26,7 @@ func TestCreate(t *testing.T) {
 	}{
 		{
 			name: "own_easy",
-			req:  dto.CreateWorkoutRequest{Kind: "own", DayLabel: "Ср", Tag: "Лёгкий", Title: "Кросс", DistKm: 6, Duration: "~46 мин", Pace: "7:40"},
+			req:  dto.CreateWorkoutRequest{Kind: "own", DayLabel: "Ср", Tag: "Лёгкий", Title: "Кросс", DistKm: 6},
 			want: 6,
 			before: func(m usecaseMocks) {
 				m.membershipRepo.EXPECT().GetActiveByUser(mock.Anything, uid).Return(nil, model.ErrNotFound).Once()
@@ -54,7 +54,7 @@ func TestCreate(t *testing.T) {
 			if tt.before != nil {
 				tt.before(m)
 			}
-			uc := workout_usecase.NewUseCase(m.workoutRepo, m.planWeekRepo, m.membershipRepo, m.clubRepo)
+			uc := workout_usecase.NewUseCase(m.workoutRepo, m.planWeekRepo, m.membershipRepo, m.clubRepo, m.activityRepo)
 			view, err := uc.Create(context.Background(), uid, model.RoleAthlete, tt.req)
 			require.NoError(t, err)
 			require.InDelta(t, tt.want, view.DistKm, 0.01)
@@ -65,6 +65,6 @@ func TestCreate(t *testing.T) {
 func TestSegmentTotal(t *testing.T) {
 	t.Parallel()
 	m := newMocks(t)
-	uc := workout_usecase.NewUseCase(m.workoutRepo, m.planWeekRepo, m.membershipRepo, m.clubRepo)
+	uc := workout_usecase.NewUseCase(m.workoutRepo, m.planWeekRepo, m.membershipRepo, m.clubRepo, m.activityRepo)
 	require.Equal(t, 8.0, uc.SegmentTotal([]dto.SegmentInput{{DistKm: 2}, {DistKm: 5}, {DistKm: 1}}))
 }

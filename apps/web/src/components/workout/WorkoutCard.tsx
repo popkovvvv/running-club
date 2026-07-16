@@ -23,7 +23,6 @@ export function WorkoutCard({ theme, workout, onClick }: {
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontWeight: 800 }}>{workout.distKm || '—'} км</div>
-          <div style={{ fontSize: 11, color: theme.accent }}>{workout.duration || workout.pace}</div>
           <div style={{ fontSize: 14, color: statusColor, fontWeight: 800 }}>{statusIcon}</div>
         </div>
       </div>

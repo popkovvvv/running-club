@@ -5,6 +5,7 @@ package activity_usecase_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/nikpopkov/running-club/api/internal/domain/model"
@@ -15,10 +16,20 @@ import (
 func TestProgress(t *testing.T) {
 	t.Parallel()
 	uid := uuid.New()
-	months := []model.MonthStat{
-		model.NewMonthStat("Июн", 100, 10, "5:30", "+10"),
-		model.NewMonthStat("Июл", 50, 5, "5:45", "+5"),
-	}
+	now := time.Now().UTC()
+	started := time.Date(now.Year(), time.June, 10, 12, 0, 0, 0, time.UTC)
+	started2 := time.Date(now.Year(), time.July, 5, 12, 0, 0, 0, time.UTC)
+
+	a1 := model.NewActivity(uid, "Run 1", "июнь", 100, "1:00", "5:30", 0, 0, 0, "", 0, 0, 0, 0)
+	a1.StartedAt = &started
+	a2 := model.NewActivity(uid, "Run 2", "июль", 50, "0:40", "5:45", 0, 0, 0, "", 0, 0, 0, 0)
+	a2.StartedAt = &started2
+
+	orphan := model.NewWorkout(uid, model.WorkoutOwn, "Пн", "Лёгкий", "Свой кросс", 6, "", 0)
+	orphan.Status = model.WorkoutStatusCompleted
+	orphanDate := time.Date(now.Year(), time.July, 12, 0, 0, 0, 0, time.UTC)
+	orphan.ScheduledDate = &orphanDate
+
 	races := []*model.Race{
 		model.NewRace(uid, "Забег 1", "01.06", "10", "1:00", 0),
 		model.NewRace(uid, "Забег 2", "01.07", "10", "1:00", 0),
@@ -28,18 +39,27 @@ func TestProgress(t *testing.T) {
 		name    string
 		before  func(m usecaseMocks)
 		wantErr error
+		check   func(t *testing.T, yearKm float64, yearTr, yearStarts int, monthsLen int)
 	}{
 		{
-			name: "ok",
+			name: "ok_from_activities_and_orphans",
 			before: func(m usecaseMocks) {
-				m.activityRepo.EXPECT().FindMonthStats(mock.Anything, uid).Return(months, nil).Once()
+				m.activityRepo.EXPECT().FindByUser(mock.Anything, uid).Return([]*model.Activity{a1, a2}, nil).Once()
+				m.workoutRepo.EXPECT().FindCompletedWithoutActivity(mock.Anything, uid).Return([]*model.Workout{orphan}, nil).Once()
 				m.activityRepo.EXPECT().FindRaces(mock.Anything, uid).Return(races, nil).Once()
+				m.workoutRepo.EXPECT().FindByUser(mock.Anything, uid).Return([]*model.Workout{}, nil).Once()
+			},
+			check: func(t *testing.T, yearKm float64, yearTr, yearStarts int, monthsLen int) {
+				require.Equal(t, 156.0, yearKm)
+				require.Equal(t, 3, yearTr)
+				require.Equal(t, 2, yearStarts)
+				require.Equal(t, 2, monthsLen)
 			},
 		},
 		{
 			name: "repo_error",
 			before: func(m usecaseMocks) {
-				m.activityRepo.EXPECT().FindMonthStats(mock.Anything, uid).Return(nil, model.ErrNotFound).Once()
+				m.activityRepo.EXPECT().FindByUser(mock.Anything, uid).Return(nil, model.ErrNotFound).Once()
 			},
 			wantErr: model.ErrNotFound,
 		},
@@ -58,12 +78,9 @@ func TestProgress(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
-			require.Equal(t, 150.0, res.YearKm)
-			require.Equal(t, 15, res.YearTr)
-			require.Equal(t, 2, res.YearStarts)
-			require.Len(t, res.Months, 2)
-			require.Equal(t, "Июн", res.Months[0].M)
-			require.Equal(t, "Июл", res.Months[1].M)
+			tt.check(t, res.YearKm, res.YearTr, res.YearStarts, len(res.Months))
+			require.Equal(t, "Июль", res.Months[0].M)
+			require.Equal(t, "Июнь", res.Months[1].M)
 		})
 	}
 }

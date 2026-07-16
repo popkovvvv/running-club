@@ -38,6 +38,7 @@ func TestPublish(t *testing.T) {
 						*created = a
 					}).
 					Return(nil).Once()
+				m.announceRepo.EXPECT().FindGoingAthletes(mock.Anything, mock.Anything).Return([]*model.User{}, nil).Once()
 			},
 		},
 		{
@@ -52,6 +53,7 @@ func TestPublish(t *testing.T) {
 						*created = a
 					}).
 					Return(nil).Once()
+				m.announceRepo.EXPECT().FindGoingAthletes(mock.Anything, mock.Anything).Return([]*model.User{}, nil).Once()
 			},
 			wantStartsOn: "2026-07-23",
 		},
@@ -72,7 +74,7 @@ func TestPublish(t *testing.T) {
 			if tt.before != nil {
 				tt.before(m, &created)
 			}
-			uc := schedule_usecase.NewUseCase(m.announceRepo, m.clubRepo, m.membershipRepo)
+			uc := schedule_usecase.NewUseCase(m.announceRepo, m.clubRepo, m.membershipRepo, m.workoutRepo)
 			view, err := uc.Publish(context.Background(), coachID, tt.req)
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

@@ -36,7 +36,11 @@ func TestSignup(t *testing.T) {
 				m.announceRepo.EXPECT().HasSignup(mock.Anything, annID, athleteID).Return(false, nil).Once()
 				m.announceRepo.EXPECT().CreateSignup(mock.Anything, mock.AnythingOfType("*model.AnnounceSignup")).Return(nil).Once()
 				m.announceRepo.EXPECT().IncGoing(mock.Anything, annID, 1).Return(nil).Once()
+				m.workoutRepo.EXPECT().Create(mock.Anything, mock.AnythingOfType("*model.Workout")).Return(nil).Once()
 				m.announceRepo.EXPECT().GetByID(mock.Anything, annID).Return(announceAfter, nil).Once()
+				m.announceRepo.EXPECT().FindGoingAthletes(mock.Anything, annID).Return([]*model.User{
+					model.UserFixture(athleteID, "Nikita Popkov", "nikita@pulse.run", "hash", model.RoleAthlete),
+				}, nil).Once()
 			},
 			wantCTA:   "Вы записаны",
 			wantGoing: 1,
@@ -64,7 +68,7 @@ func TestSignup(t *testing.T) {
 			if tt.before != nil {
 				tt.before(m)
 			}
-			uc := schedule_usecase.NewUseCase(m.announceRepo, m.clubRepo, m.membershipRepo)
+			uc := schedule_usecase.NewUseCase(m.announceRepo, m.clubRepo, m.membershipRepo, m.workoutRepo)
 			view, err := uc.Signup(context.Background(), athleteID, annID)
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

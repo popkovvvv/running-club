@@ -57,12 +57,13 @@ func (u *UseCase) Get(ctx context.Context, actorID uuid.UUID, id uuid.UUID) (*dt
 	if err != nil {
 		return nil, fmt.Errorf("workoutRepo.GetByID: %w", err)
 	}
-	if w.UserID != actorID {
-		if _, err := u.clubRepo.GetByCoachID(ctx, actorID); err != nil {
-			return nil, fmt.Errorf("access denied: %w", model.ErrForbidden)
-		}
+	if err := u.ensureWorkoutAccess(ctx, actorID, w.UserID); err != nil {
+		return nil, err
 	}
-	v := mapWorkout(w)
+	v, err := u.mapWorkoutView(ctx, w)
+	if err != nil {
+		return nil, err
+	}
 	return &v, nil
 }
 
@@ -80,9 +81,46 @@ func (u *UseCase) Update(ctx context.Context, actorID uuid.UUID, id uuid.UUID, r
 	if req.CompletedActivityID != nil {
 		w.CompletedActivityID = req.CompletedActivityID
 	}
+	if w.Status == model.WorkoutStatusCompleted && w.CompletedActivityID == nil {
+		activity := activityFromWorkout(w)
+		if err := u.activityRepo.Create(ctx, activity); err != nil {
+			return nil, fmt.Errorf("activityRepo.Create: %w", err)
+		}
+		w.CompletedActivityID = &activity.ID
+	}
 	if err := u.workoutRepo.Update(ctx, w); err != nil {
 		return nil, fmt.Errorf("workoutRepo.Update: %w", err)
 	}
-	v := mapWorkout(w)
+	v, err := u.mapWorkoutView(ctx, w)
+	if err != nil {
+		return nil, err
+	}
 	return &v, nil
+}
+
+func activityFromWorkout(w *model.Workout) *model.Activity {
+	startedAt := time.Now().UTC()
+	if w.ScheduledDate != nil {
+		startedAt = w.ScheduledDate.UTC()
+	}
+	whenLabel := startedAt.Format("02.01.2006")
+	if w.DayLabel != "" {
+		whenLabel = w.DayLabel + ", " + whenLabel
+	}
+	activity := model.NewActivity(
+		w.UserID,
+		w.Title,
+		whenLabel,
+		w.DistKm,
+		"",
+		"",
+		0, 0, 0,
+		"",
+		0, 0, 0, 0,
+	)
+	activity.Source = "manual"
+	activity.ExternalID = w.ID.String()
+	activity.SportType = "Run"
+	activity.StartedAt = &startedAt
+	return activity
 }

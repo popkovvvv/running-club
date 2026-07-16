@@ -34,7 +34,15 @@ func (r *Repo) Create(ctx context.Context, a *model.Announce) error {
 func (r *Repo) FindByClub(ctx context.Context, clubID uuid.UUID) ([]*model.Announce, error) {
 	rows, err := r.pool.Query(ctx, `
 		SELECT id, club_id, place, day_label, time, group_name, note, starts_on, going_count, created_at
-		FROM announces WHERE club_id=$1 ORDER BY created_at DESC`, clubID)
+		FROM announces WHERE club_id=$1
+		ORDER BY
+			CASE
+				WHEN starts_on IS NULL THEN 1
+				WHEN starts_on < CURRENT_DATE THEN 2
+				ELSE 0
+			END,
+			starts_on ASC NULLS LAST,
+			created_at DESC`, clubID)
 	if err != nil {
 		return nil, fmt.Errorf("Query: %w", err)
 	}
@@ -104,29 +112,28 @@ func (r *Repo) HasSignup(ctx context.Context, announceID, athleteID uuid.UUID) (
 	return n > 0, nil
 }
 
-func (r *Repo) AttendanceStats(ctx context.Context, clubID uuid.UUID) (signedUp int, capacity int, err error) {
-	var announceCount int
-	err = r.pool.QueryRow(ctx, `
-		SELECT
-			COUNT(*)::int,
-			COALESCE(SUM(going_count), 0)::int
-		FROM announces
-		WHERE club_id=$1`, clubID).Scan(&announceCount, &capacity)
-	if err != nil {
-		return 0, 0, fmt.Errorf("QueryRow: %w", err)
-	}
-	if announceCount == 0 {
-		return 0, 0, nil
-	}
-	err = r.pool.QueryRow(ctx, `
-		SELECT COUNT(*)::int
+func (r *Repo) FindGoingAthletes(ctx context.Context, announceID uuid.UUID) ([]*model.User, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT u.id, u.name, u.email, u.password_hash, u.role, u.created_at
 		FROM announce_signups s
-		JOIN announces a ON a.id = s.announce_id
-		WHERE a.club_id=$1`, clubID).Scan(&signedUp)
+		JOIN users u ON u.id = s.athlete_id
+		WHERE s.announce_id=$1
+		ORDER BY s.created_at`, announceID)
 	if err != nil {
-		return 0, 0, fmt.Errorf("QueryRow: %w", err)
+		return nil, fmt.Errorf("Query: %w", err)
 	}
-	return signedUp, capacity, nil
+	defer rows.Close()
+	var out []*model.User
+	for rows.Next() {
+		var u model.User
+		var created time.Time
+		if err := rows.Scan(&u.ID, &u.Name, &u.Email, &u.PasswordHash, &u.Role, &created); err != nil {
+			return nil, fmt.Errorf("scan: %w", err)
+		}
+		u.CreatedAt = created
+		out = append(out, &u)
+	}
+	return out, rows.Err()
 }
 
 func (r *Repo) NextLabelForAthlete(ctx context.Context, clubID, athleteID uuid.UUID) (string, error) {

@@ -18,17 +18,20 @@ packages:
       activityRepo:
       announceRepo:
       planWeekRepo:
+      workoutRepo:
   github.com/nikpopkov/running-club/api/internal/usecase/schedule_usecase:
     interfaces:
       announceRepo:
       clubResolver:
       membershipRepo:
+      workoutRepo:
   github.com/nikpopkov/running-club/api/internal/usecase/workout_usecase:
     interfaces:
       workoutRepo:
       planWeekRepo:
       membershipRepo:
       clubRepo:
+      activityRepo:
   github.com/nikpopkov/running-club/api/internal/usecase/plan_usecase:
     interfaces:
       planWeekRepo:
@@ -57,8 +60,8 @@ packages:
       clubRepo:
       userRepo:
       activityRepo:
-      announceRepo:
       planWeekRepo:
+      workoutRepo:
   github.com/nikpopkov/running-club/api/internal/usecase/strava_usecase:
     interfaces:
       integrationRepo:

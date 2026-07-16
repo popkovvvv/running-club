@@ -3,19 +3,17 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { CreateClubGate } from './CreateClubGate'
 
-const createClub = vi.fn()
+const createClub = vi.hoisted(() => vi.fn())
 
-vi.mock('../lib/store', () => ({
-  useApp: () => ({
-    theme: {
-      name: 'PULSE', display: 'Archivo', font: 'Manrope', radius: '20px',
-      bg: '#0c0e10', card: '#16191d', card2: '#1e2228', line: '#2a2f36', text: '#f4f6f7',
-      dim: '#9aa2ab', faint: '#5c636c', accent: '#ff5c22', accent2: '#ff7a45',
-      accentSoft: 'rgba(255,92,34,.15)', good: '#39d98a', onAccent: '#ffffff',
-    },
-    createClub,
-  }),
-}))
+vi.mock('../lib/store', async () => {
+  const { pulseTheme } = await import('../lib/theme')
+  return {
+    useApp: () => ({
+      theme: pulseTheme,
+      createClub,
+    }),
+  }
+})
 
 describe('CreateClubGate', () => {
   beforeEach(() => {

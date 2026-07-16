@@ -36,8 +36,8 @@ func TestListStudents(t *testing.T) {
 			before: func(m usecaseMocks) {
 				m.clubRepo.EXPECT().GetByCoachID(mock.Anything, coachID).Return(club, nil).Once()
 				m.userRepo.EXPECT().FindAthletesByClub(mock.Anything, clubID).Return([]*model.User{athlete}, nil).Once()
-				m.planWeekRepo.EXPECT().GetByClubAndIndex(mock.Anything, clubID, 0).Return(planWeek, nil).Once()
-				m.activityRepo.EXPECT().SumDistByUser(mock.Anything, athleteID).Return(24.6, nil).Once()
+				m.activityRepo.EXPECT().SumDistByUserSince(mock.Anything, athleteID, mock.Anything).Return(24.6, nil).Once()
+				m.workoutRepo.EXPECT().SumPlanDistByUserWeek(mock.Anything, athleteID, 0).Return(25.0, nil).Once()
 				m.announceRepo.EXPECT().NextLabelForAthlete(mock.Anything, clubID, athleteID).Return("Вт, 21 июля · Стадион «Зина»", nil).Once()
 			},
 			wantLen:  1,
@@ -50,14 +50,30 @@ func TestListStudents(t *testing.T) {
 			before: func(m usecaseMocks) {
 				m.clubRepo.EXPECT().GetByCoachID(mock.Anything, coachID).Return(club, nil).Once()
 				m.userRepo.EXPECT().FindAthletesByClub(mock.Anything, clubID).Return([]*model.User{athlete}, nil).Once()
+				m.activityRepo.EXPECT().SumDistByUserSince(mock.Anything, athleteID, mock.Anything).Return(0, nil).Once()
+				m.workoutRepo.EXPECT().SumPlanDistByUserWeek(mock.Anything, athleteID, 0).Return(0, nil).Once()
 				m.planWeekRepo.EXPECT().GetByClubAndIndex(mock.Anything, clubID, 0).Return(nil, model.ErrNotFound).Once()
-				m.activityRepo.EXPECT().SumDistByUser(mock.Anything, athleteID).Return(0, nil).Once()
 				m.announceRepo.EXPECT().NextLabelForAthlete(mock.Anything, clubID, athleteID).Return("", model.ErrNotFound).Once()
 			},
 			wantLen:  1,
 			wantKm:   "0.0",
 			wantSub:  "Нет записи",
 			wantComp: 0,
+		},
+		{
+			name: "fallback_plan_label",
+			before: func(m usecaseMocks) {
+				m.clubRepo.EXPECT().GetByCoachID(mock.Anything, coachID).Return(club, nil).Once()
+				m.userRepo.EXPECT().FindAthletesByClub(mock.Anything, clubID).Return([]*model.User{athlete}, nil).Once()
+				m.activityRepo.EXPECT().SumDistByUserSince(mock.Anything, athleteID, mock.Anything).Return(12.5, nil).Once()
+				m.workoutRepo.EXPECT().SumPlanDistByUserWeek(mock.Anything, athleteID, 0).Return(0, nil).Once()
+				m.planWeekRepo.EXPECT().GetByClubAndIndex(mock.Anything, clubID, 0).Return(planWeek, nil).Once()
+				m.announceRepo.EXPECT().NextLabelForAthlete(mock.Anything, clubID, athleteID).Return("Нет записи", nil).Once()
+			},
+			wantLen:  1,
+			wantKm:   "12.5",
+			wantSub:  "Нет записи",
+			wantComp: 50,
 		},
 		{
 			name: "club_not_found",
@@ -74,7 +90,7 @@ func TestListStudents(t *testing.T) {
 			if tt.before != nil {
 				tt.before(m)
 			}
-			uc := club_usecase.NewUseCase(m.clubRepo, m.membershipRepo, m.userRepo, m.activityRepo, m.announceRepo, m.planWeekRepo)
+			uc := club_usecase.NewUseCase(m.clubRepo, m.membershipRepo, m.userRepo, m.activityRepo, m.announceRepo, m.planWeekRepo, m.workoutRepo)
 			students, err := uc.ListStudents(context.Background(), coachID)
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

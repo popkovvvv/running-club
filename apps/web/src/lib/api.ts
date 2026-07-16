@@ -30,6 +30,8 @@ export type Announce = {
   going: number
   signedUp: boolean
   scheduleCta: string
+  startsOn?: string
+  attendees?: Array<{ id: string; init: string; name: string }>
 }
 
 export type Activity = {
@@ -76,8 +78,6 @@ export type Workout = {
   title: string
   description?: string
   distKm: number
-  duration: string
-  pace: string
   hr: string
   weekIndex: number
   scheduledDate?: string
@@ -86,9 +86,26 @@ export type Workout = {
   assignedBy?: string
   isClubTemplate?: boolean
   segments?: Segment[]
+  plannedKm?: number
+  actualKm?: number
+  actualPace?: string
+  fact?: ActivityDetail
 }
 
 export type PlanWeek = { weekIndex: number; rangeLabel: string; planLabel: string }
+
+export type PeriodStats = {
+  km: string
+  workouts: number
+  planCompletion: string
+  avgPace: string
+}
+
+export type PeriodSummary = {
+  week: PeriodStats
+  month: PeriodStats
+  year: PeriodStats
+}
 
 export type Student = {
   id: string
@@ -104,8 +121,23 @@ export type StudentDetail = {
   weekKm: string
   weekPlanKm: string
   comp: number
-  planDays: Array<{ dayLabel: string; title: string; workoutType: string; plannedKm: number; actualKm: number; status: string }>
+  year?: number
+  month?: number
+  planDays: Array<{
+    workoutId: string
+    dayLabel: string
+    title: string
+    workoutType: string
+    plannedKm: number
+    actualKm: number
+    status: string
+    scheduledDate?: string
+    activityId?: string
+    activityWhen?: string
+    activityPace?: string
+  }>
   recentActivities: Activity[]
+  summary: PeriodSummary
 }
 
 export type IntegrationStatus = {
@@ -158,15 +190,44 @@ export const api = {
   palette: (accentHex: string) =>
     request<Club>('/club/palette', { method: 'PATCH', body: JSON.stringify({ accentHex }) }),
   students: () => request<Student[]>('/club/students'),
-  student: (id: string, week = 0) => request<StudentDetail>(`/club/students/${id}?week=${week}`),
+  student: (id: string, opts?: { week?: number; year?: number; month?: number }) => {
+    const q = new URLSearchParams()
+    if (opts?.year) q.set('year', String(opts.year))
+    if (opts?.month) q.set('month', String(opts.month))
+    if (opts?.week != null) q.set('week', String(opts.week))
+    const qs = q.toString()
+    return request<StudentDetail>(`/club/students/${id}${qs ? `?${qs}` : ''}`)
+  },
   removeStudent: (id: string) => request<{ status: string }>(`/club/students/${id}`, { method: 'DELETE' }),
   announces: () => request<Announce[]>('/announces'),
-  publishAnnounce: (body: { place: string; day: string; time: string; group: string; note: string }) =>
+  publishAnnounce: (body: { place: string; day: string; time: string; group: string; note: string; startsOn?: string }) =>
     request<Announce>('/announces', { method: 'POST', body: JSON.stringify(body) }),
   signup: (id: string) => request<Announce>(`/announces/${id}/signup`, { method: 'POST' }),
   unsignup: (id: string) => request<Announce>(`/announces/${id}/signup`, { method: 'DELETE' }),
-  calendar: () => request<{ cells: Array<{ key: string; n: number; blank: boolean; has: boolean; isToday: boolean; bg: string; fg: string; dot: string }> }>('/schedule/calendar'),
-  plan: (week = 0) => request<{ weekIndex: number; weekRange: string; weekPlan: string; days: Workout[]; mine: Workout[] }>(`/plan?week=${week}`),
+  calendar: (year?: number, month?: number) => {
+    const q = new URLSearchParams()
+    if (year) q.set('year', String(year))
+    if (month) q.set('month', String(month))
+    const suffix = q.toString() ? `?${q}` : ''
+    return request<{
+      year: number
+      month: number
+      label: string
+      cells: Array<{ key: string; n: number; blank: boolean; has: boolean; isToday: boolean; iso?: string; bg: string; fg: string; dot: string }>
+    }>(`/schedule/calendar${suffix}`)
+  },
+  plan: (opts?: number | { week?: number; year?: number; month?: number }) => {
+    const q = new URLSearchParams()
+    if (typeof opts === 'number') {
+      q.set('week', String(opts))
+    } else if (opts) {
+      if (opts.week != null) q.set('week', String(opts.week))
+      if (opts.year) q.set('year', String(opts.year))
+      if (opts.month) q.set('month', String(opts.month))
+    }
+    const qs = q.toString()
+    return request<{ weekIndex: number; weekRange: string; weekPlan: string; weekKm: string; days: Workout[]; mine: Workout[] }>(`/plan${qs ? `?${qs}` : ''}`)
+  },
   planWeeks: () => request<PlanWeek[]>('/plan/weeks'),
   upsertPlanWeek: (weekIndex: number, body: { rangeLabel: string; planLabel: string }) =>
     request<PlanWeek>(`/plan/weeks/${weekIndex}`, { method: 'PUT', body: JSON.stringify(body) }),
@@ -185,8 +246,8 @@ export const api = {
   stravaIntegration: () => request<IntegrationStatus>('/integrations/strava'),
   connectStrava: () => request<{ url: string }>('/integrations/strava/connect'),
   disconnectStrava: () => request<{ status: string }>('/integrations/strava/disconnect', { method: 'POST' }),
-  progress: () => request<{ months: Array<{ m: string; km: number; tr: number; pace: string; diff: string }>; yearKm: number; yearTr: number; yearStarts: number }>('/progress'),
-  analytics: () => request<{ clubKm: number; attendance: number; students: Student[] }>('/analytics'),
+  progress: () => request<{ months: Array<{ m: string; km: number; tr: number; pace: string; diff: string }>; yearKm: number; yearTr: number; yearStarts: number; summary: PeriodSummary }>('/progress'),
+  analytics: () => request<{ clubKm: number; students: Student[] }>('/analytics'),
   races: () => request<Array<{ days: string; name: string; date: string; dist: string; goal: string }>>('/races'),
   prs: () => request<Array<{ d: string; t: string; date: string }>>('/prs'),
 }

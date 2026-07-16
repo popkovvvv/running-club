@@ -24,10 +24,18 @@ func (u *UseCase) Unsignup(ctx context.Context, athleteID, announceID uuid.UUID)
 	if err := u.announceRepo.IncGoing(ctx, announceID, -1); err != nil {
 		return nil, fmt.Errorf("announceRepo.IncGoing: %w", err)
 	}
+	if err := u.workoutRepo.DeleteByUserAndAnnounce(ctx, athleteID, announceID); err != nil {
+		if !errors.Is(err, model.ErrNotFound) {
+			return nil, fmt.Errorf("workoutRepo.DeleteByUserAndAnnounce: %w", err)
+		}
+	}
 	a, err = u.announceRepo.GetByID(ctx, announceID)
 	if err != nil {
 		return nil, fmt.Errorf("announceRepo.GetByID: %w", err)
 	}
-	v := toAnnounceView(a, false)
+	v, err := u.toAnnounceView(ctx, a, false)
+	if err != nil {
+		return nil, fmt.Errorf("toAnnounceView: %w", err)
+	}
 	return &v, nil
 }

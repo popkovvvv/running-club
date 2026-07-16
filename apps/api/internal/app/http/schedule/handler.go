@@ -3,6 +3,7 @@ package schedule
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
@@ -17,7 +18,7 @@ type useCase interface {
 	Publish(ctx context.Context, coachID uuid.UUID, req dto.CreateAnnounceRequest) (*dto.AnnounceView, error)
 	Signup(ctx context.Context, athleteID, announceID uuid.UUID) (*dto.AnnounceView, error)
 	Unsignup(ctx context.Context, athleteID, announceID uuid.UUID) (*dto.AnnounceView, error)
-	Calendar(ctx context.Context, userID uuid.UUID, role string) (*dto.CalendarResponse, error)
+	Calendar(ctx context.Context, userID uuid.UUID, role string, year, month int) (*dto.CalendarResponse, error)
 }
 
 type Handler struct {
@@ -84,7 +85,9 @@ func (h *Handler) Unsignup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Calendar(w http.ResponseWriter, r *http.Request) {
-	res, err := h.uc.Calendar(r.Context(), middleware.UserID(r.Context()), middleware.Role(r.Context()))
+	year, _ := strconv.Atoi(r.URL.Query().Get("year"))
+	month, _ := strconv.Atoi(r.URL.Query().Get("month"))
+	res, err := h.uc.Calendar(r.Context(), middleware.UserID(r.Context()), middleware.Role(r.Context()), year, month)
 	if err != nil {
 		response.Error(w, err)
 		return

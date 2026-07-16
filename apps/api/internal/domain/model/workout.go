@@ -25,8 +25,6 @@ type Workout struct {
 	Title               string
 	Description         string
 	DistKm              float64
-	Duration            string
-	Pace                string
 	HR                  string
 	WeekIndex           int
 	ScheduledDate       *time.Time
@@ -34,6 +32,7 @@ type Workout struct {
 	CompletedActivityID *uuid.UUID
 	AssignedBy          *uuid.UUID
 	IsClubTemplate      bool
+	AnnounceID          *uuid.UUID
 	CreatedAt           time.Time
 	Segments            []Segment
 }
@@ -43,7 +42,7 @@ func NewWorkout(
 	kind WorkoutKind,
 	dayLabel, tag, title string,
 	distKm float64,
-	duration, pace, hr string,
+	hr string,
 	weekIndex int,
 ) *Workout {
 	return &Workout{
@@ -55,8 +54,6 @@ func NewWorkout(
 		Tag:         tag,
 		Title:       title,
 		DistKm:      distKm,
-		Duration:    duration,
-		Pace:        pace,
 		HR:          hr,
 		WeekIndex:   weekIndex,
 		Status:      WorkoutStatusPlanned,

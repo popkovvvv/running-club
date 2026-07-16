@@ -2,6 +2,7 @@ package workout_usecase
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/nikpopkov/running-club/api/internal/domain/model"
@@ -13,15 +14,22 @@ type (
 		planWeekRepo   planWeekRepo
 		membershipRepo membershipRepo
 		clubRepo       clubRepo
+		activityRepo   activityRepo
 	}
 
 	workoutRepo interface {
 		Create(ctx context.Context, w *model.Workout) error
 		GetByID(ctx context.Context, id uuid.UUID) (*model.Workout, error)
 		FindByUserWeek(ctx context.Context, userID uuid.UUID, week int, kind model.WorkoutKind) ([]*model.Workout, error)
-		FindOwnByUser(ctx context.Context, userID uuid.UUID) ([]*model.Workout, error)
+		FindByUser(ctx context.Context, userID uuid.UUID) ([]*model.Workout, error)
 		Delete(ctx context.Context, id uuid.UUID) error
 		Update(ctx context.Context, w *model.Workout) error
+	}
+
+	activityRepo interface {
+		Create(ctx context.Context, a *model.Activity) error
+		GetByID(ctx context.Context, id uuid.UUID) (*model.Activity, error)
+		SumDistByUserSince(ctx context.Context, userID uuid.UUID, since time.Time) (float64, error)
 	}
 
 	planWeekRepo interface {
@@ -43,11 +51,13 @@ func NewUseCase(
 	planWeekRepo planWeekRepo,
 	membershipRepo membershipRepo,
 	clubRepo clubRepo,
+	activityRepo activityRepo,
 ) *UseCase {
 	return &UseCase{
 		workoutRepo:    workoutRepo,
 		planWeekRepo:   planWeekRepo,
 		membershipRepo: membershipRepo,
 		clubRepo:       clubRepo,
+		activityRepo:   activityRepo,
 	}
 }

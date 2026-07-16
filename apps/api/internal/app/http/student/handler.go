@@ -14,7 +14,7 @@ import (
 )
 
 type useCase interface {
-	Get(ctx context.Context, coachID, studentID uuid.UUID, weekIndex int) (*dto.StudentDetailView, error)
+	Get(ctx context.Context, coachID, studentID uuid.UUID, year, month int) (*dto.StudentDetailView, error)
 }
 
 type Handler struct {
@@ -35,8 +35,9 @@ func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 		response.JSON(w, http.StatusBadRequest, response.ErrorBody{Error: "invalid id", Code: "bad_request"})
 		return
 	}
-	weekIndex, _ := strconv.Atoi(r.URL.Query().Get("week"))
-	res, err := h.uc.Get(r.Context(), middleware.UserID(r.Context()), studentID, weekIndex)
+	year, _ := strconv.Atoi(r.URL.Query().Get("year"))
+	month, _ := strconv.Atoi(r.URL.Query().Get("month"))
+	res, err := h.uc.Get(r.Context(), middleware.UserID(r.Context()), studentID, year, month)
 	if err != nil {
 		response.Error(w, err)
 		return

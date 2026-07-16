@@ -21,7 +21,6 @@ type (
 		GetByID(ctx context.Context, id uuid.UUID) (*model.Activity, error)
 		FindPRs(ctx context.Context, userID uuid.UUID) ([]*model.PR, error)
 		FindRaces(ctx context.Context, userID uuid.UUID) ([]*model.Race, error)
-		FindMonthStats(ctx context.Context, userID uuid.UUID) ([]model.MonthStat, error)
 	}
 
 	activityStreamRepo interface {
@@ -30,6 +29,8 @@ type (
 
 	workoutRepo interface {
 		FindByCompletedActivity(ctx context.Context, activityID uuid.UUID) (*model.Workout, error)
+		FindCompletedWithoutActivity(ctx context.Context, userID uuid.UUID) ([]*model.Workout, error)
+		FindByUser(ctx context.Context, userID uuid.UUID) ([]*model.Workout, error)
 	}
 
 	clubRepo interface {

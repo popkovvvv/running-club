@@ -23,14 +23,13 @@ func TestClubAnalytics(t *testing.T) {
 	planWeek := model.NewPlanWeek(clubID, 0, "13.07 – 19.07", "25 км")
 
 	tests := []struct {
-		name           string
-		before         func(m usecaseMocks)
-		wantLen        int
-		wantClubKm     float64
-		wantAttendance int
-		wantStudentKm  string
-		wantComp       int
-		wantErr        error
+		name          string
+		before        func(m usecaseMocks)
+		wantLen       int
+		wantClubKm    float64
+		wantStudentKm string
+		wantComp      int
+		wantErr       error
 	}{
 		{
 			name: "ok",
@@ -38,31 +37,43 @@ func TestClubAnalytics(t *testing.T) {
 				m.clubRepo.EXPECT().GetByCoachID(mock.Anything, coachID).Return(club, nil).Once()
 				m.userRepo.EXPECT().FindAthletesByClub(mock.Anything, clubID).Return([]*model.User{athlete}, nil).Once()
 				m.activityRepo.EXPECT().SumDistByClubAthletes(mock.Anything, clubID).Return(48.2, nil).Once()
-				m.announceRepo.EXPECT().AttendanceStats(mock.Anything, clubID).Return(12, 14, nil).Once()
-				m.planWeekRepo.EXPECT().GetByClubAndIndex(mock.Anything, clubID, 0).Return(planWeek, nil).Once()
-				m.activityRepo.EXPECT().SumDistByUser(mock.Anything, athleteID).Return(24.6, nil).Once()
+				m.activityRepo.EXPECT().SumDistByUserSince(mock.Anything, athleteID, mock.Anything).Return(24.6, nil).Once()
+				m.workoutRepo.EXPECT().SumPlanDistByUserWeek(mock.Anything, athleteID, 0).Return(25.0, nil).Once()
 			},
-			wantLen:        1,
-			wantClubKm:     48.2,
-			wantAttendance: 86,
-			wantStudentKm:  "24.6",
-			wantComp:       98,
+			wantLen:       1,
+			wantClubKm:    48.2,
+			wantStudentKm: "24.6",
+			wantComp:      98,
 		},
 		{
-			name: "no_announces",
+			name: "no_plan",
 			before: func(m usecaseMocks) {
 				m.clubRepo.EXPECT().GetByCoachID(mock.Anything, coachID).Return(club, nil).Once()
 				m.userRepo.EXPECT().FindAthletesByClub(mock.Anything, clubID).Return([]*model.User{athlete}, nil).Once()
 				m.activityRepo.EXPECT().SumDistByClubAthletes(mock.Anything, clubID).Return(10.0, nil).Once()
-				m.announceRepo.EXPECT().AttendanceStats(mock.Anything, clubID).Return(0, 0, nil).Once()
+				m.activityRepo.EXPECT().SumDistByUserSince(mock.Anything, athleteID, mock.Anything).Return(10.0, nil).Once()
+				m.workoutRepo.EXPECT().SumPlanDistByUserWeek(mock.Anything, athleteID, 0).Return(0, nil).Once()
 				m.planWeekRepo.EXPECT().GetByClubAndIndex(mock.Anything, clubID, 0).Return(nil, model.ErrNotFound).Once()
-				m.activityRepo.EXPECT().SumDistByUser(mock.Anything, athleteID).Return(10.0, nil).Once()
 			},
-			wantLen:        1,
-			wantClubKm:     10.0,
-			wantAttendance: 0,
-			wantStudentKm:  "10.0",
-			wantComp:       0,
+			wantLen:       1,
+			wantClubKm:    10.0,
+			wantStudentKm: "10.0",
+			wantComp:      0,
+		},
+		{
+			name: "fallback_plan_label",
+			before: func(m usecaseMocks) {
+				m.clubRepo.EXPECT().GetByCoachID(mock.Anything, coachID).Return(club, nil).Once()
+				m.userRepo.EXPECT().FindAthletesByClub(mock.Anything, clubID).Return([]*model.User{athlete}, nil).Once()
+				m.activityRepo.EXPECT().SumDistByClubAthletes(mock.Anything, clubID).Return(12.5, nil).Once()
+				m.activityRepo.EXPECT().SumDistByUserSince(mock.Anything, athleteID, mock.Anything).Return(12.5, nil).Once()
+				m.workoutRepo.EXPECT().SumPlanDistByUserWeek(mock.Anything, athleteID, 0).Return(0, nil).Once()
+				m.planWeekRepo.EXPECT().GetByClubAndIndex(mock.Anything, clubID, 0).Return(planWeek, nil).Once()
+			},
+			wantLen:       1,
+			wantClubKm:    12.5,
+			wantStudentKm: "12.5",
+			wantComp:      50,
 		},
 		{
 			name: "club_not_found",
@@ -79,7 +90,7 @@ func TestClubAnalytics(t *testing.T) {
 			if tt.before != nil {
 				tt.before(m)
 			}
-			uc := analytics_usecase.NewUseCase(m.clubRepo, m.userRepo, m.activityRepo, m.announceRepo, m.planWeekRepo)
+			uc := analytics_usecase.NewUseCase(m.clubRepo, m.userRepo, m.activityRepo, m.planWeekRepo, m.workoutRepo)
 			res, err := uc.ClubAnalytics(context.Background(), coachID)
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)
@@ -87,7 +98,6 @@ func TestClubAnalytics(t *testing.T) {
 			}
 			require.NoError(t, err)
 			require.Equal(t, tt.wantClubKm, res.ClubKm)
-			require.Equal(t, tt.wantAttendance, res.Attendance)
 			require.Len(t, res.Students, tt.wantLen)
 			require.Equal(t, "ИП", res.Students[0].Init)
 			require.Equal(t, tt.wantStudentKm, res.Students[0].Km)

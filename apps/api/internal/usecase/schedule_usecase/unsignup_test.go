@@ -34,7 +34,9 @@ func TestUnsignup(t *testing.T) {
 				m.announceRepo.EXPECT().GetByID(mock.Anything, annID).Return(announce, nil).Once()
 				m.announceRepo.EXPECT().DeleteSignup(mock.Anything, annID, athleteID).Return(nil).Once()
 				m.announceRepo.EXPECT().IncGoing(mock.Anything, annID, -1).Return(nil).Once()
+				m.workoutRepo.EXPECT().DeleteByUserAndAnnounce(mock.Anything, athleteID, annID).Return(nil).Once()
 				m.announceRepo.EXPECT().GetByID(mock.Anything, annID).Return(announceAfter, nil).Once()
+				m.announceRepo.EXPECT().FindGoingAthletes(mock.Anything, annID).Return([]*model.User{}, nil).Once()
 			},
 		},
 		{
@@ -53,7 +55,7 @@ func TestUnsignup(t *testing.T) {
 			if tt.before != nil {
 				tt.before(m)
 			}
-			uc := schedule_usecase.NewUseCase(m.announceRepo, m.clubRepo, m.membershipRepo)
+			uc := schedule_usecase.NewUseCase(m.announceRepo, m.clubRepo, m.membershipRepo, m.workoutRepo)
 			view, err := uc.Unsignup(context.Background(), athleteID, annID)
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

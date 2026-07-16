@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { api, type Segment, type Student, type Workout } from '../lib/api'
 import { useApp } from '../lib/store'
-import { WORKOUT_PRESETS, type WorkoutType } from '../lib/workoutTypes'
+import { type WorkoutType } from '../lib/workoutTypes'
+import { DateField } from '../components/workout/DateField'
 import { SegmentEditor } from '../components/workout/SegmentEditor'
+import { StudentField } from '../components/workout/StudentField'
 import { WeekPicker } from '../components/workout/WeekPicker'
 import { WorkoutCard } from '../components/workout/WorkoutCard'
 import { WorkoutTypePicker } from '../components/workout/WorkoutTypePicker'
@@ -10,7 +12,7 @@ import { WorkoutTypePicker } from '../components/workout/WorkoutTypePicker'
 type CoachTab = 'template' | 'students' | 'assign'
 
 export function CoachPlanScreen() {
-  const { theme, openOverlay } = useApp()
+  const { theme, openOverlay, tabEpoch } = useApp()
   const [tab, setTab] = useState<CoachTab>('template')
   const [week, setWeek] = useState(0)
   const [weekMeta, setWeekMeta] = useState({ rangeLabel: '', planLabel: '' })
@@ -18,9 +20,10 @@ export function CoachPlanScreen() {
   const [students, setStudents] = useState<Student[]>([])
   const [selectedStudent, setSelectedStudent] = useState('')
   const [workoutType, setWorkoutType] = useState<WorkoutType>('interval')
-  const [title, setTitle] = useState('Индивидуальная')
-  const [dayLabel, setDayLabel] = useState('Чт')
-  const [segs, setSegs] = useState<Segment[]>(WORKOUT_PRESETS.interval)
+  const [title, setTitle] = useState('')
+  const [dayLabel, setDayLabel] = useState('')
+  const [scheduledDate, setScheduledDate] = useState<string | null>(null)
+  const [segs, setSegs] = useState<Segment[]>([])
   const [draftWorkouts, setDraftWorkouts] = useState<Workout[]>([])
 
   const load = () => {
@@ -37,13 +40,9 @@ export function CoachPlanScreen() {
 
   useEffect(() => {
     load()
-  }, [week])
+  }, [week, tabEpoch])
 
-  useEffect(() => {
-    setSegs(WORKOUT_PRESETS[workoutType])
-  }, [workoutType])
-
-  const totalKm = segs.reduce((a, s) => a + s.distKm, 0)
+  const totalKm = segs.reduce((a, s) => a + (s.distKm || 0), 0)
 
   const addToTemplate = () => {
     const item: Workout = {
@@ -54,11 +53,10 @@ export function CoachPlanScreen() {
       tag: workoutType,
       title,
       distKm: totalKm,
-      duration: '',
-      pace: segs[0]?.pace || '',
       hr: '',
       weekIndex: week,
       status: 'planned',
+      scheduledDate: scheduledDate || undefined,
       segments: segs,
     }
     setDraftWorkouts((list) => [...list, item])
@@ -72,8 +70,8 @@ export function CoachPlanScreen() {
       tag: w.tag,
       title: w.title,
       distKm: w.distKm,
-      pace: w.pace,
       weekIndex: week,
+      scheduledDate: w.scheduledDate,
       segments: w.segments || [],
     })))
     load()
@@ -98,8 +96,17 @@ export function CoachPlanScreen() {
             <button className="btn" onClick={() => void api.upsertPlanWeek(week, weekMeta).then(load)} style={{ background: theme.card2, color: theme.accent, borderRadius: 10, padding: '8px 12px' }}>OK</button>
           </div>
           <WorkoutTypePicker theme={theme} value={workoutType} onChange={setWorkoutType} />
-          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Название" style={{ background: theme.card2, border: 'none', borderRadius: 10, padding: 12, color: theme.text }} />
-          <input value={dayLabel} onChange={(e) => setDayLabel(e.target.value)} placeholder="День" style={{ background: theme.card2, border: 'none', borderRadius: 10, padding: 12, color: theme.text }} />
+          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Название" style={{ width: '100%', background: theme.card2, border: 'none', borderRadius: 10, padding: 12, color: theme.text, boxSizing: 'border-box' }} />
+          <DateField
+            theme={theme}
+            value={scheduledDate}
+            dayLabel={dayLabel}
+            onChange={(iso, label) => {
+              setScheduledDate(iso)
+              setDayLabel(label)
+            }}
+          />
+          <div style={{ fontSize: 12, color: theme.dim }}>Объём: {totalKm > 0 ? `${totalKm.toFixed(1)} км` : '—'}</div>
           <SegmentEditor theme={theme} segments={segs} onChange={setSegs} />
           <button className="btn" onClick={addToTemplate} style={{ background: theme.accentSoft, color: theme.accent, borderRadius: 14, padding: 12 }}>＋ В шаблон недели</button>
           {draftWorkouts.map((w) => (
@@ -120,11 +127,17 @@ export function CoachPlanScreen() {
 
       {tab === 'assign' && (
         <>
-          <select value={selectedStudent} onChange={(e) => setSelectedStudent(e.target.value)} style={{ background: theme.card2, color: theme.text, border: 'none', borderRadius: 10, padding: 12 }}>
-            <option value="">Выберите ученика</option>
-            {students.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
+          <StudentField theme={theme} students={students} value={selectedStudent} onChange={setSelectedStudent} />
           <WorkoutTypePicker theme={theme} value={workoutType} onChange={setWorkoutType} />
+          <DateField
+            theme={theme}
+            value={scheduledDate}
+            dayLabel={dayLabel}
+            onChange={(iso, label) => {
+              setScheduledDate(iso)
+              setDayLabel(label)
+            }}
+          />
           <SegmentEditor theme={theme} segments={segs} onChange={setSegs} />
           <button
             className="btn"
@@ -134,9 +147,10 @@ export function CoachPlanScreen() {
               targetUserId: selectedStudent,
               workoutType,
               dayLabel,
-              title,
+              title: title || 'Индивидуальная',
               distKm: totalKm,
               weekIndex: week,
+              scheduledDate: scheduledDate || undefined,
               segments: segs,
             })}
             style={{ background: theme.accent, color: theme.onAccent, borderRadius: 14, padding: 15, opacity: selectedStudent ? 1 : 0.5 }}

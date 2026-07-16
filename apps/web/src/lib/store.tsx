@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { api, type Announce, type Club, type User } from './api'
+import { api, type Activity, type Announce, type Club, type User } from './api'
 import { pulseTheme, withAccent, type Theme } from './theme'
 
-type Screen = 'home' | 'schedule' | 'plan' | 'prog' | 'races' | 'profile'
+type Screen = 'home' | 'schedule' | 'plan' | 'prog' | 'profile'
 
 export type Overlay =
   | { type: 'activity'; id: string }
@@ -16,8 +16,10 @@ type AppState = {
   theme: Theme
   club: Club | null
   screen: Screen
+  tabEpoch: number
   overlay: Overlay
   announces: Announce[]
+  activities: Activity[]
   loading: boolean
   setScreen: (s: Screen) => void
   openOverlay: (o: Overlay) => void
@@ -33,7 +35,9 @@ type AppState = {
   signupAnnounce: (id: string) => Promise<void>
   unsignupAnnounce: (id: string) => Promise<void>
   removeStudent: (id: string) => Promise<void>
-  publishAnnounce: (body: { place: string; day: string; time: string; group: string; note: string }) => Promise<void>
+  publishAnnounce: (body: { place: string; day: string; time: string; group: string; note: string; startsOn?: string }) => Promise<void>
+  reloadAnnounces: () => Promise<void>
+  reloadActivities: () => Promise<void>
 }
 
 const Ctx = createContext<AppState | null>(null)
@@ -42,18 +46,50 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
   const [club, setClub] = useState<Club | null>(null)
-  const [screen, setScreen] = useState<Screen>('home')
+  const [screen, setScreenState] = useState<Screen>('home')
+  const [tabEpoch, setTabEpoch] = useState(0)
   const [overlay, setOverlay] = useState<Overlay>(null)
   const [announces, setAnnounces] = useState<Announce[]>([])
+  const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
 
-  const theme = useMemo(() => withAccent(pulseTheme, club?.accentHex || pulseTheme.accent), [club?.accentHex])
+  const setScreen = useCallback((s: Screen) => {
+    setScreenState(s)
+    setTabEpoch((n) => n + 1)
+  }, [])
+
+  const closeOverlay = useCallback(() => {
+    setOverlay(null)
+    setTabEpoch((n) => n + 1)
+  }, [])
+
+  const theme = useMemo(
+    () => ({
+      ...withAccent(pulseTheme, club?.accentHex || pulseTheme.accent),
+      name: club?.name || pulseTheme.name,
+    }),
+    [club?.accentHex, club?.name],
+  )
+
+  const reloadActivities = useCallback(async () => {
+    if (!localStorage.getItem('token')) {
+      setActivities([])
+      return
+    }
+    try {
+      const list = await api.activities()
+      setActivities(list)
+    } catch {
+      setActivities([])
+    }
+  }, [])
 
   const refresh = useCallback(async () => {
     if (!localStorage.getItem('token')) {
       setUser(null)
       setClub(null)
       setAnnounces([])
+      setActivities([])
       setLoading(false)
       return
     }
@@ -63,21 +99,40 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (me.needsClub) {
         setClub(null)
         setAnnounces([])
+        setActivities([])
       } else if (me.inClub || me.role === 'coach') {
         const c = await api.club()
         setClub(c)
-        const a = await api.announces()
-        setAnnounces(a)
+        setAnnounces(await api.announces())
+        if (me.role !== 'coach') {
+          setActivities(await api.activities().catch(() => []))
+        } else {
+          setActivities([])
+        }
       } else {
         setClub(null)
         setAnnounces([])
+        setActivities(await api.activities().catch(() => []))
       }
     } catch {
       localStorage.removeItem('token')
       setToken(null)
       setUser(null)
+      setActivities([])
     } finally {
       setLoading(false)
+    }
+  }, [])
+
+  const reloadAnnounces = useCallback(async () => {
+    if (!localStorage.getItem('token')) {
+      setAnnounces([])
+      return
+    }
+    try {
+      setAnnounces(await api.announces())
+    } catch {
+      setAnnounces([])
     }
   }, [])
 
@@ -99,12 +154,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     theme,
     club,
     screen,
+    tabEpoch,
     overlay,
     announces,
+    activities,
     loading,
     setScreen,
     openOverlay: setOverlay,
-    closeOverlay: () => setOverlay(null),
+    closeOverlay,
     login: async (email, password) => {
       const res = await api.login({ email, password })
       await applyAuth(res)
@@ -119,6 +176,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setUser(null)
       setClub(null)
       setAnnounces([])
+      setActivities([])
     },
     refresh,
     createClub: async (body) => {
@@ -132,6 +190,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setClub(c)
       setAnnounces(await api.announces())
       setUser((u) => (u ? { ...u, inClub: true, clubId: c.id } : u))
+      await reloadActivities()
     },
     leaveClub: async () => {
       await api.leaveClub()
@@ -157,8 +216,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     publishAnnounce: async (body) => {
       const a = await api.publishAnnounce(body)
-      setAnnounces((list) => [a, ...list])
+      setAnnounces((list) => [a, ...list.filter((x) => x.id !== a.id)])
     },
+    reloadAnnounces,
+    reloadActivities,
   }
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

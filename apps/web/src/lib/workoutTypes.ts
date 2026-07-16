@@ -24,13 +24,20 @@ export const WORKOUT_TYPES: { id: WorkoutType; label: string }[] = [
   { id: 'long', label: 'Длинный' },
   { id: 'tempo', label: 'Темповый' },
   { id: 'interval', label: 'Интервалы' },
-  { id: 'fartlek', label: 'Фартlek' },
-  { id: 'recovery', label: 'Восстановление' },
-  { id: 'hills', label: 'Горки' },
-  { id: 'race', label: 'Старт' },
-  { id: 'cross', label: 'Кросс' },
-  { id: 'rest', label: 'Отдых' },
 ]
+
+const WORKOUT_TYPE_LABELS: Record<string, string> = {
+  easy: 'Лёгкий',
+  long: 'Длинный',
+  tempo: 'Темповый',
+  interval: 'Интервалы',
+  fartlek: 'Фартlek',
+  recovery: 'Восстановление',
+  hills: 'Горки',
+  race: 'Старт',
+  cross: 'Кросс',
+  rest: 'Отдых',
+}
 
 export const SEGMENT_KINDS: { id: SegmentKind; label: string }[] = [
   { id: 'warmup', label: 'Разминка' },
@@ -43,7 +50,7 @@ export const SEGMENT_KINDS: { id: SegmentKind; label: string }[] = [
 ]
 
 export function workoutTypeLabel(id: string) {
-  return WORKOUT_TYPES.find((t) => t.id === id)?.label || id
+  return WORKOUT_TYPE_LABELS[id] || id
 }
 
 export function segmentKindLabel(id: string) {

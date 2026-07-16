@@ -14,7 +14,7 @@ import (
 )
 
 type useCase interface {
-	Plan(ctx context.Context, userID uuid.UUID, week int) (*dto.PlanResponse, error)
+	Plan(ctx context.Context, userID uuid.UUID, week, year, month int) (*dto.PlanResponse, error)
 	Create(ctx context.Context, actorID uuid.UUID, role model.Role, req dto.CreateWorkoutRequest) (*dto.WorkoutView, error)
 	Get(ctx context.Context, actorID uuid.UUID, id uuid.UUID) (*dto.WorkoutView, error)
 	Update(ctx context.Context, actorID uuid.UUID, id uuid.UUID, req dto.UpdateWorkoutRequest) (*dto.WorkoutView, error)
@@ -31,7 +31,9 @@ func NewHandler(uc useCase) *Handler {
 
 func (h *Handler) Plan(w http.ResponseWriter, r *http.Request) {
 	week, _ := strconv.Atoi(r.URL.Query().Get("week"))
-	res, err := h.uc.Plan(r.Context(), middleware.UserID(r.Context()), week)
+	year, _ := strconv.Atoi(r.URL.Query().Get("year"))
+	month, _ := strconv.Atoi(r.URL.Query().Get("month"))
+	res, err := h.uc.Plan(r.Context(), middleware.UserID(r.Context()), week, year, month)
 	if err != nil {
 		response.Error(w, err)
 		return

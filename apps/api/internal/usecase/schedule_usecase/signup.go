@@ -28,10 +28,17 @@ func (u *UseCase) Signup(ctx context.Context, athleteID, announceID uuid.UUID) (
 	if err := u.announceRepo.IncGoing(ctx, announceID, 1); err != nil {
 		return nil, fmt.Errorf("announceRepo.IncGoing: %w", err)
 	}
+	w := workoutFromAnnounce(athleteID, a)
+	if err := u.workoutRepo.Create(ctx, w); err != nil {
+		return nil, fmt.Errorf("workoutRepo.Create: %w", err)
+	}
 	a, err = u.announceRepo.GetByID(ctx, announceID)
 	if err != nil {
 		return nil, fmt.Errorf("announceRepo.GetByID: %w", err)
 	}
-	v := toAnnounceView(a, true)
+	v, err := u.toAnnounceView(ctx, a, true)
+	if err != nil {
+		return nil, fmt.Errorf("toAnnounceView: %w", err)
+	}
 	return &v, nil
 }

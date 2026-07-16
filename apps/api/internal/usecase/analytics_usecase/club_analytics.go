@@ -7,6 +7,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/google/uuid"
@@ -27,28 +28,26 @@ func (u *UseCase) ClubAnalytics(ctx context.Context, coachID uuid.UUID) (*dto.An
 	if err != nil {
 		return nil, fmt.Errorf("activityRepo.SumDistByClubAthletes: %w", err)
 	}
-	signedUp, capacity, err := u.announceRepo.AttendanceStats(ctx, club.ID)
-	if err != nil {
-		return nil, fmt.Errorf("announceRepo.AttendanceStats: %w", err)
-	}
-	attendance := attendancePct(signedUp, capacity)
-	planKm, hasPlan := 0.0, false
-	pw, err := u.planWeekRepo.GetByClubAndIndex(ctx, club.ID, 0)
-	if err != nil {
-		if !errors.Is(err, model.ErrNotFound) {
-			return nil, fmt.Errorf("planWeekRepo.GetByClubAndIndex: %w", err)
-		}
-	} else {
-		planKm, hasPlan = pw.TargetKm()
-	}
+	weekStart := startOfWeek(time.Now().UTC())
 	students := make([]dto.StudentView, 0, len(users))
 	for _, usr := range users {
-		km, err := u.activityRepo.SumDistByUser(ctx, usr.ID)
+		km, err := u.activityRepo.SumDistByUserSince(ctx, usr.ID, weekStart)
 		if err != nil {
-			return nil, fmt.Errorf("activityRepo.SumDistByUser: %w", err)
+			return nil, fmt.Errorf("activityRepo.SumDistByUserSince: %w", err)
+		}
+		planKm, err := u.workoutRepo.SumPlanDistByUserWeek(ctx, usr.ID, 0)
+		if err != nil {
+			return nil, fmt.Errorf("workoutRepo.SumPlanDistByUserWeek: %w", err)
+		}
+		if planKm == 0 {
+			if pw, err := u.planWeekRepo.GetByClubAndIndex(ctx, club.ID, 0); err == nil {
+				planKm, _ = pw.TargetKm()
+			} else if !errors.Is(err, model.ErrNotFound) {
+				return nil, fmt.Errorf("planWeekRepo.GetByClubAndIndex: %w", err)
+			}
 		}
 		comp := 0
-		if hasPlan {
+		if planKm > 0 {
 			comp = int(math.Min(100, math.Round(100*km/planKm)))
 		}
 		students = append(students, dto.NewStudentView(
@@ -60,21 +59,7 @@ func (u *UseCase) ClubAnalytics(ctx context.Context, coachID uuid.UUID) (*dto.An
 			comp,
 		))
 	}
-	return dto.NewAnalyticsResponse(clubKm, attendance, students), nil
-}
-
-func attendancePct(signedUp, capacity int) int {
-	if signedUp == 0 && capacity == 0 {
-		return 0
-	}
-	denom := capacity
-	if denom == 0 {
-		denom = signedUp
-		if denom < 1 {
-			denom = 1
-		}
-	}
-	return int(math.Round(100 * float64(signedUp) / float64(denom)))
+	return dto.NewAnalyticsResponse(clubKm, students), nil
 }
 
 func initials(name string) string {
@@ -88,4 +73,13 @@ func initials(name string) string {
 		b.WriteRune(r)
 	}
 	return strings.ToUpper(b.String())
+}
+
+func startOfWeek(t time.Time) time.Time {
+	weekday := int(t.Weekday())
+	if weekday == 0 {
+		weekday = 7
+	}
+	d := t.AddDate(0, 0, -(weekday - 1))
+	return time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, time.UTC)
 }

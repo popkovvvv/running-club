@@ -25,7 +25,7 @@ test.describe('running club', () => {
     await expect(page.getByTestId('nav-home')).toBeVisible()
     await expect(page.getByTestId('nav-plan')).toBeVisible()
     await expect(page.getByTestId('nav-prog')).toBeVisible()
-    await expect(page.getByTestId('nav-races')).toBeVisible()
+    await expect(page.getByTestId('nav-races')).toHaveCount(0)
     await expect(page.getByTestId('nav-profile')).toBeVisible()
 
     await page.getByTestId('group-preview').click()

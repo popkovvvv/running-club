@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useApp } from '../lib/store'
 
-type Tab = 'home' | 'plan' | 'prog' | 'races' | 'profile'
+type Tab = 'home' | 'plan' | 'prog' | 'profile'
 
 const icons: Record<Tab, ReactNode> = {
   home: (
@@ -21,12 +21,6 @@ const icons: Record<Tab, ReactNode> = {
       <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
     </svg>
   ),
-  races: (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="8" r="6" />
-      <path d="M8.5 13.5 7 22l5-3 5 3-1.5-8.5" />
-    </svg>
-  ),
   profile: (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="8" r="4" />
@@ -38,19 +32,17 @@ const icons: Record<Tab, ReactNode> = {
 function labels(isCoach: boolean): Record<Tab, string> {
   return {
     home: isCoach ? 'Ученики' : 'Главная',
-    plan: isCoach ? 'План недели' : 'План',
+    plan: 'План',
     prog: isCoach ? 'Аналитика' : 'Прогресс',
-    races: 'Старты',
     profile: isCoach ? 'Клуб' : 'Профиль',
   }
 }
 
-const tabs: Tab[] = ['home', 'plan', 'prog', 'races', 'profile']
-
 export function BottomNav() {
   const { user, screen, setScreen } = useApp()
   const isCoach = user?.role === 'coach'
-  const tabLabels = labels(!!isCoach)
+  const tabLabels = labels(isCoach)
+  const tabs: Tab[] = isCoach ? ['home', 'prog', 'profile'] : ['home', 'plan', 'prog', 'profile']
   const active: Tab | null = tabs.includes(screen as Tab) ? (screen as Tab) : null
 
   return (

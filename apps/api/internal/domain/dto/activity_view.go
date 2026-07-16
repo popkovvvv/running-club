@@ -56,18 +56,20 @@ func NewActivityView(
 }
 
 type ProgressResponse struct {
-	Months     []MonthStatView `json:"months"`
-	YearKm     float64         `json:"yearKm"`
-	YearTr     int             `json:"yearTr"`
-	YearStarts int             `json:"yearStarts"`
+	Months     []MonthStatView   `json:"months"`
+	YearKm     float64           `json:"yearKm"`
+	YearTr     int               `json:"yearTr"`
+	YearStarts int               `json:"yearStarts"`
+	Summary    PeriodSummaryView `json:"summary"`
 }
 
-func NewProgressResponse(yearKm float64, yearTr, yearStarts int, months []MonthStatView) *ProgressResponse {
+func NewProgressResponse(yearKm float64, yearTr, yearStarts int, months []MonthStatView, summary PeriodSummaryView) *ProgressResponse {
 	return &ProgressResponse{
 		Months:     months,
 		YearKm:     yearKm,
 		YearTr:     yearTr,
 		YearStarts: yearStarts,
+		Summary:    summary,
 	}
 }
 
@@ -90,16 +92,14 @@ func NewMonthStatView(month string, km float64, tr int, pace, diff string) Month
 }
 
 type AnalyticsResponse struct {
-	ClubKm     float64       `json:"clubKm"`
-	Attendance int           `json:"attendance"`
-	Students   []StudentView `json:"students"`
+	ClubKm   float64       `json:"clubKm"`
+	Students []StudentView `json:"students"`
 }
 
-func NewAnalyticsResponse(clubKm float64, attendance int, students []StudentView) *AnalyticsResponse {
+func NewAnalyticsResponse(clubKm float64, students []StudentView) *AnalyticsResponse {
 	return &AnalyticsResponse{
-		ClubKm:     clubKm,
-		Attendance: attendance,
-		Students:   students,
+		ClubKm:   clubKm,
+		Students: students,
 	}
 }
 

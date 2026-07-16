@@ -4,17 +4,61 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/nikpopkov/running-club/api/internal/domain/dto"
 	"github.com/nikpopkov/running-club/api/internal/domain/model"
 )
 
-func (u *UseCase) Plan(ctx context.Context, userID uuid.UUID, week int) (*dto.PlanResponse, error) {
+const planWeekCount = 4
+
+func (u *UseCase) Plan(ctx context.Context, userID uuid.UUID, week, year, month int) (*dto.PlanResponse, error) {
+	if year > 0 && month >= 1 && month <= 12 {
+		return u.planMonth(ctx, userID, year, month)
+	}
+	return u.planWeek(ctx, userID, week)
+}
+
+func (u *UseCase) planMonth(ctx context.Context, userID uuid.UUID, year, month int) (*dto.PlanResponse, error) {
+	all, err := u.workoutRepo.FindByUser(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("workoutRepo.FindByUser: %w", err)
+	}
+
+	var days, mine []*model.Workout
+	for _, w := range all {
+		at := workoutDate(w)
+		if at.Year() != year || int(at.Month()) != month {
+			continue
+		}
+		switch w.Kind {
+		case model.WorkoutPlan:
+			days = append(days, w)
+		case model.WorkoutOwn:
+			mine = append(mine, w)
+		}
+	}
+
+	weekKm, err := u.activityRepo.SumDistByUserSince(ctx, userID, startOfWeek(time.Now().UTC()))
+	if err != nil {
+		return nil, fmt.Errorf("activityRepo.SumDistByUserSince: %w", err)
+	}
+
+	weekPlan := planVolumeLabel(days, mine)
+	return dto.NewPlanResponse(0, "", weekPlan, formatKm(weekKm), mapWorkouts(days), mapWorkouts(mine)), nil
+}
+
+func (u *UseCase) planWeek(ctx context.Context, userID uuid.UUID, week int) (*dto.PlanResponse, error) {
 	if week < 0 {
 		week = 0
 	}
-	weekRange, weekPlan := "", ""
+	if week >= planWeekCount {
+		week = planWeekCount - 1
+	}
+
+	weekRange, weekPlan := defaultWeekRange(week, time.Now().UTC()), ""
 	membership, err := u.membershipRepo.GetActiveByUser(ctx, userID)
 	if err != nil {
 		if !errors.Is(err, model.ErrNotFound) {
@@ -35,20 +79,78 @@ func (u *UseCase) Plan(ctx context.Context, userID uuid.UUID, week int) (*dto.Pl
 			}
 			for _, pw := range weeks {
 				if pw.WeekIndex == week {
-					weekRange = pw.RangeLabel
+					if pw.RangeLabel != "" {
+						weekRange = pw.RangeLabel
+					}
 					weekPlan = pw.PlanLabel
 					break
 				}
 			}
 		}
 	}
+
 	days, err := u.workoutRepo.FindByUserWeek(ctx, userID, week, model.WorkoutPlan)
 	if err != nil {
 		return nil, fmt.Errorf("workoutRepo.FindByUserWeek: %w", err)
 	}
-	mine, err := u.workoutRepo.FindOwnByUser(ctx, userID)
+	mine, err := u.workoutRepo.FindByUserWeek(ctx, userID, week, model.WorkoutOwn)
 	if err != nil {
-		return nil, fmt.Errorf("workoutRepo.FindOwnByUser: %w", err)
+		return nil, fmt.Errorf("workoutRepo.FindByUserWeek: %w", err)
 	}
-	return dto.NewPlanResponse(week, weekRange, weekPlan, mapWorkouts(days), mapWorkouts(mine)), nil
+	if weekPlan == "" {
+		weekPlan = planVolumeLabel(days, mine)
+	}
+
+	weekKm, err := u.activityRepo.SumDistByUserSince(ctx, userID, startOfWeek(time.Now().UTC()))
+	if err != nil {
+		return nil, fmt.Errorf("activityRepo.SumDistByUserSince: %w", err)
+	}
+
+	return dto.NewPlanResponse(week, weekRange, weekPlan, formatKm(weekKm), mapWorkouts(days), mapWorkouts(mine)), nil
+}
+
+func workoutDate(w *model.Workout) time.Time {
+	if w.ScheduledDate != nil {
+		return w.ScheduledDate.UTC()
+	}
+	return w.CreatedAt.UTC()
+}
+
+func defaultWeekRange(weekIndex int, now time.Time) string {
+	start := startOfWeek(now).AddDate(0, 0, weekIndex*7)
+	end := start.AddDate(0, 0, 6)
+	return start.Format("02.01") + " – " + end.Format("02.01")
+}
+
+func startOfWeek(t time.Time) time.Time {
+	weekday := int(t.Weekday())
+	if weekday == 0 {
+		weekday = 7
+	}
+	d := t.AddDate(0, 0, -(weekday - 1))
+	return time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, time.UTC)
+}
+
+func planVolumeLabel(days, mine []*model.Workout) string {
+	var total float64
+	for _, w := range days {
+		total += w.DistKm
+	}
+	for _, w := range mine {
+		total += w.DistKm
+	}
+	if total <= 0 {
+		return ""
+	}
+	if total == float64(int(total)) {
+		return strconv.Itoa(int(total)) + " км"
+	}
+	return strconv.FormatFloat(total, 'f', 1, 64) + " км"
+}
+
+func formatKm(v float64) string {
+	if v <= 0 {
+		return "0"
+	}
+	return strconv.FormatFloat(v, 'f', 1, 64)
 }

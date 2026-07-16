@@ -37,6 +37,13 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	}
 	if n > 0 {
 		_, _ = pool.Exec(ctx, `UPDATE memberships SET status='active', updated_at=NOW() WHERE user_id=$1 AND club_id=$2`, athleteID, clubID)
+		_, _ = pool.Exec(ctx, `
+			UPDATE workouts w SET week_index=0
+			WHERE w.club_id=$1 AND w.kind='plan' AND w.week_index=1 AND w.is_club_template=false
+			  AND NOT EXISTS (
+				SELECT 1 FROM workouts x
+				WHERE x.user_id=w.user_id AND x.week_index=0 AND x.kind='plan' AND x.is_club_template=false
+			  )`, clubID)
 	} else {
 		_, err = pool.Exec(ctx, `INSERT INTO clubs (id,name,invite_code,accent_hex,coach_id,created_at) VALUES ($1,'PULSE','PULSE-7K42','#ff5c22',$2,$3)`,
 			clubID, coachID, now)
@@ -86,21 +93,21 @@ func Run(ctx context.Context, pool *pgxpool.Pool) error {
 	}
 
 	planDays := []struct {
-		day, tag, title, dist, dur string
-		km                         float64
+		day, tag, title string
+		km              float64
 	}{
-		{"Пн", "Восстановление", "Зарядка + лёгкий бег", "5 км", "~35 мин", 5},
-		{"Вт", "Интервалы", "Стадион «Зина» · отрезки", "8 км", "~1:05", 8},
-		{"Ср", "Кросс", "Восстановительный кросс", "6 км", "~46 мин", 6},
-		{"Чт", "Темповая", "ЛЭМЗ · темповый бег", "7 км", "~50 мин", 7},
-		{"Пт", "Отдых", "Восстановление", "—", "—", 0},
-		{"Сб", "Длительный", "Длительный кросс", "8 км", "~1:00", 8},
-		{"Вс", "Отдых", "Полный отдых", "—", "—", 0},
+		{"Пн", "Восстановление", "Зарядка + лёгкий бег", 5},
+		{"Вт", "Интервалы", "Стадион «Зина» · отрезки", 8},
+		{"Ср", "Кросс", "Восстановительный кросс", 6},
+		{"Чт", "Темповая", "ЛЭМЗ · темповый бег", 7},
+		{"Пт", "Отдых", "Восстановление", 0},
+		{"Сб", "Длительный", "Длительный кросс", 8},
+		{"Вс", "Отдых", "Полный отдых", 0},
 	}
 	for _, d := range planDays {
-		_, err = pool.Exec(ctx, `INSERT INTO workouts (id,club_id,user_id,kind,day_label,tag,title,dist_km,duration,pace,hr,week_index,created_at)
-			VALUES ($1,$2,$3,'plan',$4,$5,$6,$7,$8,'','',1,$9)`,
-			uuid.New(), clubID, athleteID, d.day, d.tag, d.title, d.km, d.dur, now)
+		_, err = pool.Exec(ctx, `INSERT INTO workouts (id,club_id,user_id,kind,day_label,tag,title,dist_km,hr,week_index,created_at)
+			VALUES ($1,$2,$3,'plan',$4,$5,$6,$7,'',0,$8)`,
+			uuid.New(), clubID, athleteID, d.day, d.tag, d.title, d.km, now)
 		if err != nil {
 			return fmt.Errorf("insert workout: %w", err)
 		}

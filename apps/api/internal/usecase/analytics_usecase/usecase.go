@@ -2,6 +2,7 @@ package analytics_usecase
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/nikpopkov/running-club/api/internal/domain/model"
@@ -12,8 +13,8 @@ type (
 		clubRepo     clubRepo
 		userRepo     userRepo
 		activityRepo activityRepo
-		announceRepo announceRepo
 		planWeekRepo planWeekRepo
+		workoutRepo  workoutRepo
 	}
 
 	clubRepo interface {
@@ -25,16 +26,16 @@ type (
 	}
 
 	activityRepo interface {
-		SumDistByUser(ctx context.Context, userID uuid.UUID) (float64, error)
+		SumDistByUserSince(ctx context.Context, userID uuid.UUID, since time.Time) (float64, error)
 		SumDistByClubAthletes(ctx context.Context, clubID uuid.UUID) (float64, error)
-	}
-
-	announceRepo interface {
-		AttendanceStats(ctx context.Context, clubID uuid.UUID) (signedUp int, capacity int, err error)
 	}
 
 	planWeekRepo interface {
 		GetByClubAndIndex(ctx context.Context, clubID uuid.UUID, weekIndex int) (*model.PlanWeek, error)
+	}
+
+	workoutRepo interface {
+		SumPlanDistByUserWeek(ctx context.Context, userID uuid.UUID, weekIndex int) (float64, error)
 	}
 )
 
@@ -42,14 +43,14 @@ func NewUseCase(
 	clubRepo clubRepo,
 	userRepo userRepo,
 	activityRepo activityRepo,
-	announceRepo announceRepo,
 	planWeekRepo planWeekRepo,
+	workoutRepo workoutRepo,
 ) *UseCase {
 	return &UseCase{
 		clubRepo:     clubRepo,
 		userRepo:     userRepo,
 		activityRepo: activityRepo,
-		announceRepo: announceRepo,
 		planWeekRepo: planWeekRepo,
+		workoutRepo:  workoutRepo,
 	}
 }

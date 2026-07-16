@@ -225,6 +225,65 @@ func (_c *AnnounceRepo_FindByClub_Call) RunAndReturn(run func(context.Context, u
 	return _c
 }
 
+// FindGoingAthletes provides a mock function with given fields: ctx, announceID
+func (_m *AnnounceRepo) FindGoingAthletes(ctx context.Context, announceID uuid.UUID) ([]*model.User, error) {
+	ret := _m.Called(ctx, announceID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FindGoingAthletes")
+	}
+
+	var r0 []*model.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) ([]*model.User, error)); ok {
+		return rf(ctx, announceID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) []*model.User); ok {
+		r0 = rf(ctx, announceID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*model.User)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, announceID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AnnounceRepo_FindGoingAthletes_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindGoingAthletes'
+type AnnounceRepo_FindGoingAthletes_Call struct {
+	*mock.Call
+}
+
+// FindGoingAthletes is a helper method to define mock.On call
+//   - ctx context.Context
+//   - announceID uuid.UUID
+func (_e *AnnounceRepo_Expecter) FindGoingAthletes(ctx interface{}, announceID interface{}) *AnnounceRepo_FindGoingAthletes_Call {
+	return &AnnounceRepo_FindGoingAthletes_Call{Call: _e.mock.On("FindGoingAthletes", ctx, announceID)}
+}
+
+func (_c *AnnounceRepo_FindGoingAthletes_Call) Run(run func(ctx context.Context, announceID uuid.UUID)) *AnnounceRepo_FindGoingAthletes_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *AnnounceRepo_FindGoingAthletes_Call) Return(_a0 []*model.User, _a1 error) *AnnounceRepo_FindGoingAthletes_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *AnnounceRepo_FindGoingAthletes_Call) RunAndReturn(run func(context.Context, uuid.UUID) ([]*model.User, error)) *AnnounceRepo_FindGoingAthletes_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetByID provides a mock function with given fields: ctx, id
 func (_m *AnnounceRepo) GetByID(ctx context.Context, id uuid.UUID) (*model.Announce, error) {
 	ret := _m.Called(ctx, id)

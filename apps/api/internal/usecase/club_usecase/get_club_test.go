@@ -66,7 +66,7 @@ func TestGetClub(t *testing.T) {
 			if tt.before != nil {
 				tt.before(m)
 			}
-			uc := club_usecase.NewUseCase(m.clubRepo, m.membershipRepo, m.userRepo, m.activityRepo, m.announceRepo, m.planWeekRepo)
+			uc := club_usecase.NewUseCase(m.clubRepo, m.membershipRepo, m.userRepo, m.activityRepo, m.announceRepo, m.planWeekRepo, m.workoutRepo)
 			view, err := uc.GetClub(context.Background(), tt.userID, tt.role)
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

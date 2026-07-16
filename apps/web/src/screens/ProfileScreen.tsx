@@ -12,7 +12,7 @@ function initials(name?: string) {
 }
 
 export function ProfileAthlete() {
-  const { theme, user, club, joinClub, leaveClub, logout } = useApp()
+  const { theme, user, club, joinClub, leaveClub, logout, tabEpoch } = useApp()
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [strava, setStrava] = useState<IntegrationStatus | null>(null)
@@ -21,6 +21,7 @@ export function ProfileAthlete() {
 
   useEffect(() => {
     let mounted = true
+    setStravaLoading(true)
     void api.stravaIntegration()
       .then((res) => {
         if (mounted) {
@@ -41,7 +42,7 @@ export function ProfileAthlete() {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [tabEpoch])
 
   const connectStrava = async () => {
     const res = await api.connectStrava()

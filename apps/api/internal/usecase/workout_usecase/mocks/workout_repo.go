@@ -117,6 +117,65 @@ func (_c *WorkoutRepo_Delete_Call) RunAndReturn(run func(context.Context, uuid.U
 	return _c
 }
 
+// FindByUser provides a mock function with given fields: ctx, userID
+func (_m *WorkoutRepo) FindByUser(ctx context.Context, userID uuid.UUID) ([]*model.Workout, error) {
+	ret := _m.Called(ctx, userID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for FindByUser")
+	}
+
+	var r0 []*model.Workout
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) ([]*model.Workout, error)); ok {
+		return rf(ctx, userID)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) []*model.Workout); ok {
+		r0 = rf(ctx, userID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*model.Workout)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
+		r1 = rf(ctx, userID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// WorkoutRepo_FindByUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindByUser'
+type WorkoutRepo_FindByUser_Call struct {
+	*mock.Call
+}
+
+// FindByUser is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+func (_e *WorkoutRepo_Expecter) FindByUser(ctx interface{}, userID interface{}) *WorkoutRepo_FindByUser_Call {
+	return &WorkoutRepo_FindByUser_Call{Call: _e.mock.On("FindByUser", ctx, userID)}
+}
+
+func (_c *WorkoutRepo_FindByUser_Call) Run(run func(ctx context.Context, userID uuid.UUID)) *WorkoutRepo_FindByUser_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID))
+	})
+	return _c
+}
+
+func (_c *WorkoutRepo_FindByUser_Call) Return(_a0 []*model.Workout, _a1 error) *WorkoutRepo_FindByUser_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *WorkoutRepo_FindByUser_Call) RunAndReturn(run func(context.Context, uuid.UUID) ([]*model.Workout, error)) *WorkoutRepo_FindByUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // FindByUserWeek provides a mock function with given fields: ctx, userID, week, kind
 func (_m *WorkoutRepo) FindByUserWeek(ctx context.Context, userID uuid.UUID, week int, kind model.WorkoutKind) ([]*model.Workout, error) {
 	ret := _m.Called(ctx, userID, week, kind)
@@ -174,65 +233,6 @@ func (_c *WorkoutRepo_FindByUserWeek_Call) Return(_a0 []*model.Workout, _a1 erro
 }
 
 func (_c *WorkoutRepo_FindByUserWeek_Call) RunAndReturn(run func(context.Context, uuid.UUID, int, model.WorkoutKind) ([]*model.Workout, error)) *WorkoutRepo_FindByUserWeek_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
-// FindOwnByUser provides a mock function with given fields: ctx, userID
-func (_m *WorkoutRepo) FindOwnByUser(ctx context.Context, userID uuid.UUID) ([]*model.Workout, error) {
-	ret := _m.Called(ctx, userID)
-
-	if len(ret) == 0 {
-		panic("no return value specified for FindOwnByUser")
-	}
-
-	var r0 []*model.Workout
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) ([]*model.Workout, error)); ok {
-		return rf(ctx, userID)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) []*model.Workout); ok {
-		r0 = rf(ctx, userID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*model.Workout)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
-		r1 = rf(ctx, userID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// WorkoutRepo_FindOwnByUser_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindOwnByUser'
-type WorkoutRepo_FindOwnByUser_Call struct {
-	*mock.Call
-}
-
-// FindOwnByUser is a helper method to define mock.On call
-//   - ctx context.Context
-//   - userID uuid.UUID
-func (_e *WorkoutRepo_Expecter) FindOwnByUser(ctx interface{}, userID interface{}) *WorkoutRepo_FindOwnByUser_Call {
-	return &WorkoutRepo_FindOwnByUser_Call{Call: _e.mock.On("FindOwnByUser", ctx, userID)}
-}
-
-func (_c *WorkoutRepo_FindOwnByUser_Call) Run(run func(ctx context.Context, userID uuid.UUID)) *WorkoutRepo_FindOwnByUser_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID))
-	})
-	return _c
-}
-
-func (_c *WorkoutRepo_FindOwnByUser_Call) Return(_a0 []*model.Workout, _a1 error) *WorkoutRepo_FindOwnByUser_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *WorkoutRepo_FindOwnByUser_Call) RunAndReturn(run func(context.Context, uuid.UUID) ([]*model.Workout, error)) *WorkoutRepo_FindOwnByUser_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/nikpopkov/running-club/api/internal/domain/dto"
@@ -21,20 +22,23 @@ func (u *UseCase) ListStudents(ctx context.Context, coachID uuid.UUID) ([]dto.St
 	if err != nil {
 		return nil, fmt.Errorf("userRepo.FindAthletesByClub: %w", err)
 	}
-	planKm, hasPlan := 0.0, false
-	pw, err := u.planWeekRepo.GetByClubAndIndex(ctx, club.ID, 0)
-	if err != nil {
-		if !errors.Is(err, model.ErrNotFound) {
-			return nil, fmt.Errorf("planWeekRepo.GetByClubAndIndex: %w", err)
-		}
-	} else {
-		planKm, hasPlan = pw.TargetKm()
-	}
+	weekStart := startOfWeek(time.Now().UTC())
 	out := make([]dto.StudentView, 0, len(users))
 	for _, usr := range users {
-		km, err := u.activityRepo.SumDistByUser(ctx, usr.ID)
+		km, err := u.activityRepo.SumDistByUserSince(ctx, usr.ID, weekStart)
 		if err != nil {
-			return nil, fmt.Errorf("activityRepo.SumDistByUser: %w", err)
+			return nil, fmt.Errorf("activityRepo.SumDistByUserSince: %w", err)
+		}
+		planKm, err := u.workoutRepo.SumPlanDistByUserWeek(ctx, usr.ID, 0)
+		if err != nil {
+			return nil, fmt.Errorf("workoutRepo.SumPlanDistByUserWeek: %w", err)
+		}
+		if planKm == 0 {
+			if pw, err := u.planWeekRepo.GetByClubAndIndex(ctx, club.ID, 0); err == nil {
+				planKm, _ = pw.TargetKm()
+			} else if !errors.Is(err, model.ErrNotFound) {
+				return nil, fmt.Errorf("planWeekRepo.GetByClubAndIndex: %w", err)
+			}
 		}
 		sub, err := u.announceRepo.NextLabelForAthlete(ctx, club.ID, usr.ID)
 		if err != nil {
@@ -44,7 +48,7 @@ func (u *UseCase) ListStudents(ctx context.Context, coachID uuid.UUID) ([]dto.St
 			sub = "Нет записи"
 		}
 		comp := 0
-		if hasPlan {
+		if planKm > 0 {
 			comp = int(math.Min(100, math.Round(100*km/planKm)))
 		}
 		out = append(out, dto.NewStudentView(
@@ -57,4 +61,13 @@ func (u *UseCase) ListStudents(ctx context.Context, coachID uuid.UUID) ([]dto.St
 		))
 	}
 	return out, nil
+}
+
+func startOfWeek(t time.Time) time.Time {
+	weekday := int(t.Weekday())
+	if weekday == 0 {
+		weekday = 7
+	}
+	d := t.AddDate(0, 0, -(weekday - 1))
+	return time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, time.UTC)
 }

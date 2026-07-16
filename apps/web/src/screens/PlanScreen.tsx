@@ -1,88 +1,214 @@
-import { useEffect, useState } from 'react'
-import { api, type Segment } from '../lib/api'
-import { useApp } from '../lib/store'
-import { WORKOUT_PRESETS, type WorkoutType } from '../lib/workoutTypes'
+import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { ScheduleCalendar, formatAnnounceDay } from '../components/schedule/ScheduleCalendar'
 import { SegmentEditor } from '../components/workout/SegmentEditor'
-import { WeekPicker } from '../components/workout/WeekPicker'
 import { WorkoutCard } from '../components/workout/WorkoutCard'
 import { WorkoutTypePicker } from '../components/workout/WorkoutTypePicker'
+import { api, type Segment, type Workout } from '../lib/api'
+import { buildMonthCells, MONTH_LABELS } from '../lib/monthCalendar'
+import { useApp } from '../lib/store'
+import type { WorkoutType } from '../lib/workoutTypes'
 
 export function PlanScreen() {
-  const { theme, openOverlay } = useApp()
+  const { theme, openOverlay, tabEpoch } = useApp()
+  const now = new Date()
+  const [year, setYear] = useState(now.getFullYear())
+  const [month, setMonth] = useState(now.getMonth() + 1)
   const [plan, setPlan] = useState<Awaited<ReturnType<typeof api.plan>> | null>(null)
-  const [week, setWeek] = useState(0)
+  const [selectedIso, setSelectedIso] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
   const [workoutType, setWorkoutType] = useState<WorkoutType>('easy')
-  const [title, setTitle] = useState('Свой кросс')
-  const [dayLabel, setDayLabel] = useState('Ср')
-  const [pace, setPace] = useState('7:40')
-  const [duration, setDuration] = useState('~46 мин')
-  const [segs, setSegs] = useState<Segment[]>(WORKOUT_PRESETS.easy)
+  const [title, setTitle] = useState('')
+  const [segs, setSegs] = useState<Segment[]>([])
+  const [phoneEl, setPhoneEl] = useState<HTMLElement | null>(null)
 
-  const reload = () => void api.plan(week).then(setPlan)
+  const reload = () => void api.plan({ year, month }).then((p) => {
+    setPlan(p)
+    setSelectedIso((prev) => {
+      const all = [...(p.days || []), ...(p.mine || [])]
+      if (prev && all.some((w) => w.scheduledDate === prev)) return prev
+      return all.find((w) => w.scheduledDate)?.scheduledDate || null
+    })
+  })
 
   useEffect(() => {
     reload()
-  }, [week])
+  }, [year, month, tabEpoch])
 
   useEffect(() => {
-    setSegs(WORKOUT_PRESETS[workoutType])
-  }, [workoutType])
+    setPhoneEl(document.querySelector('.phone'))
+  }, [])
 
-  const totalKm = segs.reduce((a, s) => a + s.distKm, 0)
+  const allWorkouts = useMemo(() => [...(plan?.days || []), ...(plan?.mine || [])], [plan])
+
+  const marked = useMemo(() => {
+    const s = new Set<string>()
+    allWorkouts.forEach((w) => {
+      if (w.scheduledDate) s.add(w.scheduledDate)
+    })
+    return s
+  }, [allWorkouts])
+
+  const completed = useMemo(() => {
+    const s = new Set<string>()
+    allWorkouts.forEach((w) => {
+      if (w.scheduledDate && w.status === 'completed') s.add(w.scheduledDate)
+    })
+    return s
+  }, [allWorkouts])
+
+  const cells = useMemo(
+    () => buildMonthCells(year, month, theme, marked, completed),
+    [year, month, theme, marked, completed],
+  )
+
+  const dayWorkouts = allWorkouts.filter((w) => w.scheduledDate === selectedIso)
+
+  const shiftMonth = (delta: number) => {
+    const d = new Date(year, month - 1 + delta, 1)
+    setYear(d.getFullYear())
+    setMonth(d.getMonth() + 1)
+    setSelectedIso(null)
+  }
+
+  const resetForm = () => {
+    setWorkoutType('easy')
+    setTitle('')
+    setSegs([])
+  }
+
+  const openModal = () => {
+    if (!selectedIso) return
+    resetForm()
+    setOpen(true)
+  }
+
+  const closeModal = () => {
+    setOpen(false)
+    resetForm()
+  }
+
+  const totalKm = segs.reduce((a, s) => a + (s.distKm || 0), 0)
+
+  const modal = open && phoneEl ? createPortal(
+    <div
+      data-testid="workout-modal"
+      style={{
+        position: 'absolute',
+        inset: 0,
+        background: 'rgba(0,0,0,.6)',
+        zIndex: 50,
+        display: 'flex',
+        alignItems: 'flex-end',
+      }}
+      onClick={closeModal}
+    >
+      <div
+        className="card"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: '100%',
+          maxHeight: '92%',
+          overflowY: 'auto',
+          borderRadius: '24px 24px 0 0',
+          paddingBottom: 28,
+          boxSizing: 'border-box',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <div style={{ fontFamily: theme.display, fontWeight: 800 }}>Новая тренировка</div>
+          <button
+            type="button"
+            className="btn"
+            data-testid="workout-modal-close"
+            onClick={closeModal}
+            style={{ width: 36, height: 36, borderRadius: 10, background: theme.card2, color: theme.dim, fontSize: 18 }}
+          >
+            ✕
+          </button>
+        </div>
+        <WorkoutTypePicker theme={theme} value={workoutType} onChange={setWorkoutType} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Название"
+            style={{ width: '100%', background: theme.card2, border: 'none', borderRadius: 10, padding: 12, color: theme.text, boxSizing: 'border-box' }}
+          />
+        </div>
+        <div style={{ marginTop: 12, fontSize: 12, color: theme.dim }}>
+          Объём: {totalKm > 0 ? `${totalKm.toFixed(1)} км` : '—'}
+        </div>
+        <div style={{ marginTop: 8 }}>
+          <SegmentEditor theme={theme} segments={segs} onChange={setSegs} />
+        </div>
+        <button
+          data-testid="save-workout"
+          className="btn"
+          disabled={!selectedIso}
+          onClick={() => {
+            if (!selectedIso) return
+            void api.createWorkout({
+              kind: 'own',
+              workoutType,
+              dayLabel: formatAnnounceDay(selectedIso),
+              tag: workoutType,
+              title: title || 'Своя тренировка',
+              distKm: totalKm,
+              weekIndex: 0,
+              scheduledDate: selectedIso,
+              segments: segs,
+            }).then(reload).then(closeModal)
+          }}
+          style={{ width: '100%', marginTop: 12, background: theme.accent, color: theme.onAccent, borderRadius: 14, padding: 14, opacity: selectedIso ? 1 : 0.5 }}
+        >
+          Добавить в план
+        </button>
+        <button className="btn" onClick={closeModal} style={{ width: '100%', marginTop: 8, background: theme.card2, color: theme.dim, borderRadius: 14, padding: 12 }}>
+          Закрыть
+        </button>
+      </div>
+    </div>,
+    phoneEl,
+  ) : null
 
   return (
     <div className="fade" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <WeekPicker theme={theme} week={week} weekRange={plan?.weekRange || ''} weekPlan={plan?.weekPlan || ''} onChange={setWeek} />
-      <button data-testid="create-workout" className="btn" onClick={() => setOpen(true)} style={{ border: `1.5px dashed ${theme.accent}`, background: theme.accentSoft, color: theme.accent, borderRadius: 14, padding: 13 }}>
+      <ScheduleCalendar
+        theme={theme}
+        label={`${MONTH_LABELS[month - 1]} ${year}`}
+        cells={cells}
+        selectedIso={selectedIso}
+        onSelect={(iso) => setSelectedIso(iso)}
+        onPrevMonth={() => shiftMonth(-1)}
+        onNextMonth={() => shiftMonth(1)}
+      />
+      <button
+        data-testid="create-workout"
+        className="btn"
+        disabled={!selectedIso}
+        onClick={openModal}
+        style={{
+          border: `1.5px dashed ${theme.accent}`,
+          background: theme.accentSoft,
+          color: theme.accent,
+          borderRadius: 14,
+          padding: 13,
+          opacity: selectedIso ? 1 : 0.5,
+        }}
+      >
         ＋ Создать свою тренировку
       </button>
-      {plan?.mine?.map((w) => (
+      <div style={{ fontFamily: theme.display, fontWeight: 800, textTransform: 'uppercase', fontSize: 14 }}>
+        {selectedIso ? formatAnnounceDay(selectedIso) : 'Выберите день'}
+      </div>
+      {selectedIso && dayWorkouts.length === 0 && (
+        <div className="card" style={{ fontSize: 13, color: theme.dim }}>Нет тренировок в этот день</div>
+      )}
+      {dayWorkouts.map((w: Workout) => (
         <WorkoutCard key={w.id} theme={theme} workout={w} onClick={() => openOverlay({ type: 'workout', id: w.id })} />
       ))}
-      {plan?.days?.map((d) => (
-        <WorkoutCard key={d.id} theme={theme} workout={d} onClick={() => openOverlay({ type: 'workout', id: d.id })} />
-      ))}
-      {open && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', zIndex: 30, display: 'flex', alignItems: 'flex-end' }}>
-          <div className="card" style={{ width: '100%', maxHeight: '85vh', overflowY: 'auto', borderRadius: '28px 28px 46px 46px', margin: '0 0 80px' }}>
-            <div style={{ fontFamily: theme.display, fontWeight: 800, marginBottom: 12 }}>Новая тренировка</div>
-            <WorkoutTypePicker theme={theme} value={workoutType} onChange={setWorkoutType} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
-              <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Название" style={{ background: theme.card2, border: 'none', borderRadius: 10, padding: 12, color: theme.text }} />
-              <input value={dayLabel} onChange={(e) => setDayLabel(e.target.value)} placeholder="День (Пн, Ср…)" style={{ background: theme.card2, border: 'none', borderRadius: 10, padding: 12, color: theme.text }} />
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="Длительность" style={{ flex: 1, background: theme.card2, border: 'none', borderRadius: 10, padding: 12, color: theme.text }} />
-                <input value={pace} onChange={(e) => setPace(e.target.value)} placeholder="Темп" style={{ flex: 1, background: theme.card2, border: 'none', borderRadius: 10, padding: 12, color: theme.text }} />
-              </div>
-            </div>
-            <div style={{ marginTop: 12, fontSize: 12, color: theme.dim }}>Объём: {totalKm.toFixed(1)} км</div>
-            <div style={{ marginTop: 8 }}>
-              <SegmentEditor theme={theme} segments={segs} onChange={setSegs} />
-            </div>
-            <button
-              data-testid="save-workout"
-              className="btn"
-              onClick={() => void api.createWorkout({
-                kind: 'own',
-                workoutType,
-                dayLabel,
-                tag: workoutType,
-                title,
-                distKm: totalKm,
-                duration,
-                pace,
-                weekIndex: week,
-                segments: segs,
-              }).then(reload).then(() => setOpen(false))}
-              style={{ width: '100%', marginTop: 12, background: theme.accent, color: theme.onAccent, borderRadius: 14, padding: 14 }}
-            >
-              Добавить в план
-            </button>
-            <button className="btn" onClick={() => setOpen(false)} style={{ width: '100%', marginTop: 8, background: theme.card2, color: theme.dim, borderRadius: 14, padding: 12 }}>Закрыть</button>
-          </div>
-        </div>
-      )}
+      {modal}
     </div>
   )
 }

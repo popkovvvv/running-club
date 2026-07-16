@@ -82,65 +82,6 @@ func (_c *ActivityRepo_FindByUser_Call) RunAndReturn(run func(context.Context, u
 	return _c
 }
 
-// FindMonthStats provides a mock function with given fields: ctx, userID
-func (_m *ActivityRepo) FindMonthStats(ctx context.Context, userID uuid.UUID) ([]model.MonthStat, error) {
-	ret := _m.Called(ctx, userID)
-
-	if len(ret) == 0 {
-		panic("no return value specified for FindMonthStats")
-	}
-
-	var r0 []model.MonthStat
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) ([]model.MonthStat, error)); ok {
-		return rf(ctx, userID)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID) []model.MonthStat); ok {
-		r0 = rf(ctx, userID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]model.MonthStat)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID) error); ok {
-		r1 = rf(ctx, userID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// ActivityRepo_FindMonthStats_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'FindMonthStats'
-type ActivityRepo_FindMonthStats_Call struct {
-	*mock.Call
-}
-
-// FindMonthStats is a helper method to define mock.On call
-//   - ctx context.Context
-//   - userID uuid.UUID
-func (_e *ActivityRepo_Expecter) FindMonthStats(ctx interface{}, userID interface{}) *ActivityRepo_FindMonthStats_Call {
-	return &ActivityRepo_FindMonthStats_Call{Call: _e.mock.On("FindMonthStats", ctx, userID)}
-}
-
-func (_c *ActivityRepo_FindMonthStats_Call) Run(run func(ctx context.Context, userID uuid.UUID)) *ActivityRepo_FindMonthStats_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uuid.UUID))
-	})
-	return _c
-}
-
-func (_c *ActivityRepo_FindMonthStats_Call) Return(_a0 []model.MonthStat, _a1 error) *ActivityRepo_FindMonthStats_Call {
-	_c.Call.Return(_a0, _a1)
-	return _c
-}
-
-func (_c *ActivityRepo_FindMonthStats_Call) RunAndReturn(run func(context.Context, uuid.UUID) ([]model.MonthStat, error)) *ActivityRepo_FindMonthStats_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // FindPRs provides a mock function with given fields: ctx, userID
 func (_m *ActivityRepo) FindPRs(ctx context.Context, userID uuid.UUID) ([]*model.PR, error) {
 	ret := _m.Called(ctx, userID)

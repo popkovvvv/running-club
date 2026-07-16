@@ -22,20 +22,20 @@ func NewRepo(pool *pgxpool.Pool) *Repo {
 
 const workoutColumns = `
 	id, club_id, user_id, kind, workout_type, day_label, tag, title, description,
-	dist_km, duration, pace, hr, week_index, scheduled_date, status,
-	completed_activity_id, assigned_by, is_club_template, created_at`
+	dist_km, hr, week_index, scheduled_date, status,
+	completed_activity_id, assigned_by, is_club_template, announce_id, created_at`
 
 func (r *Repo) Create(ctx context.Context, w *model.Workout) error {
 	_, err := r.pool.Exec(ctx, `
 		INSERT INTO workouts (
 			id, club_id, user_id, kind, workout_type, day_label, tag, title, description,
-			dist_km, duration, pace, hr, week_index, scheduled_date, status,
-			completed_activity_id, assigned_by, is_club_template, created_at
+			dist_km, hr, week_index, scheduled_date, status,
+			completed_activity_id, assigned_by, is_club_template, announce_id, created_at
 		)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)`,
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
 		w.ID, w.ClubID, w.UserID, w.Kind, w.WorkoutType, w.DayLabel, w.Tag, w.Title, w.Description,
-		w.DistKm, w.Duration, w.Pace, w.HR, w.WeekIndex, w.ScheduledDate, w.Status,
-		w.CompletedActivityID, w.AssignedBy, w.IsClubTemplate, w.CreatedAt)
+		w.DistKm, w.HR, w.WeekIndex, w.ScheduledDate, w.Status,
+		w.CompletedActivityID, w.AssignedBy, w.IsClubTemplate, w.AnnounceID, w.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("exec: %w", err)
 	}
@@ -92,6 +92,18 @@ func (r *Repo) FindByUserWeek(ctx context.Context, userID uuid.UUID, week int, k
 	return r.scanWorkouts(ctx, rows)
 }
 
+func (r *Repo) FindByUser(ctx context.Context, userID uuid.UUID) ([]*model.Workout, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT`+workoutColumns+`
+		FROM workouts WHERE user_id=$1 AND is_club_template=false
+		ORDER BY scheduled_date NULLS LAST, created_at DESC`, userID)
+	if err != nil {
+		return nil, fmt.Errorf("Query: %w", err)
+	}
+	defer rows.Close()
+	return r.scanWorkouts(ctx, rows)
+}
+
 func (r *Repo) FindOwnByUser(ctx context.Context, userID uuid.UUID) ([]*model.Workout, error) {
 	rows, err := r.pool.Query(ctx, `
 		SELECT`+workoutColumns+`
@@ -131,13 +143,13 @@ func (r *Repo) ReplaceClubTemplates(ctx context.Context, clubID uuid.UUID, weekI
 		_, err := tx.Exec(ctx, `
 			INSERT INTO workouts (
 				id, club_id, user_id, kind, workout_type, day_label, tag, title, description,
-				dist_km, duration, pace, hr, week_index, scheduled_date, status,
-				completed_activity_id, assigned_by, is_club_template, created_at
+				dist_km, hr, week_index, scheduled_date, status,
+				completed_activity_id, assigned_by, is_club_template, announce_id, created_at
 			)
-			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)`,
+			VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
 			w.ID, w.ClubID, w.UserID, w.Kind, w.WorkoutType, w.DayLabel, w.Tag, w.Title, w.Description,
-			w.DistKm, w.Duration, w.Pace, w.HR, w.WeekIndex, w.ScheduledDate, w.Status,
-			w.CompletedActivityID, w.AssignedBy, w.IsClubTemplate, w.CreatedAt)
+			w.DistKm, w.HR, w.WeekIndex, w.ScheduledDate, w.Status,
+			w.CompletedActivityID, w.AssignedBy, w.IsClubTemplate, w.AnnounceID, w.CreatedAt)
 		if err != nil {
 			return fmt.Errorf("tx.Exec insert template: %w", err)
 		}
@@ -165,7 +177,8 @@ func (r *Repo) ReplaceClubTemplates(ctx context.Context, clubID uuid.UUID, weekI
 func (r *Repo) DeleteClubAssignedPlans(ctx context.Context, userID uuid.UUID, weekIndex int) error {
 	_, err := r.pool.Exec(ctx, `
 		DELETE FROM workouts
-		WHERE user_id=$1 AND week_index=$2 AND kind='plan' AND is_club_template=false AND assigned_by IS NULL`,
+		WHERE user_id=$1 AND week_index=$2 AND kind='plan' AND is_club_template=false
+			AND assigned_by IS NULL AND announce_id IS NULL`,
 		userID, weekIndex)
 	if err != nil {
 		return fmt.Errorf("exec: %w", err)
@@ -201,6 +214,27 @@ func (r *Repo) FindByCompletedActivity(ctx context.Context, activityID uuid.UUID
 	return w, nil
 }
 
+func (r *Repo) FindCompletedWithoutActivity(ctx context.Context, userID uuid.UUID) ([]*model.Workout, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT`+workoutColumns+`
+		FROM workouts
+		WHERE user_id=$1 AND status='completed' AND completed_activity_id IS NULL AND is_club_template=false
+		ORDER BY created_at DESC`, userID)
+	if err != nil {
+		return nil, fmt.Errorf("Query: %w", err)
+	}
+	defer rows.Close()
+	var out []*model.Workout
+	for rows.Next() {
+		w, err := scanWorkout(rows)
+		if err != nil {
+			return nil, fmt.Errorf("scanWorkout: %w", err)
+		}
+		out = append(out, w)
+	}
+	return out, rows.Err()
+}
+
 func (r *Repo) SumPlanDistByUserWeek(ctx context.Context, userID uuid.UUID, weekIndex int) (float64, error) {
 	var sum float64
 	err := r.pool.QueryRow(ctx, `
@@ -215,6 +249,18 @@ func (r *Repo) SumPlanDistByUserWeek(ctx context.Context, userID uuid.UUID, week
 
 func (r *Repo) Delete(ctx context.Context, id uuid.UUID) error {
 	ct, err := r.pool.Exec(ctx, `DELETE FROM workouts WHERE id=$1`, id)
+	if err != nil {
+		return fmt.Errorf("exec: %w", err)
+	}
+	if ct.RowsAffected() == 0 {
+		return model.ErrNotFound
+	}
+	return nil
+}
+
+func (r *Repo) DeleteByUserAndAnnounce(ctx context.Context, userID, announceID uuid.UUID) error {
+	ct, err := r.pool.Exec(ctx, `
+		DELETE FROM workouts WHERE user_id=$1 AND announce_id=$2`, userID, announceID)
 	if err != nil {
 		return fmt.Errorf("exec: %w", err)
 	}
@@ -270,11 +316,12 @@ func scanWorkout(row scannable) (*model.Workout, error) {
 	var scheduledDate *time.Time
 	var completedActivityID *uuid.UUID
 	var assignedBy *uuid.UUID
+	var announceID *uuid.UUID
 	var created time.Time
 	if err := row.Scan(
 		&w.ID, &clubID, &w.UserID, &w.Kind, &w.WorkoutType, &w.DayLabel, &w.Tag, &w.Title, &w.Description,
-		&w.DistKm, &w.Duration, &w.Pace, &w.HR, &w.WeekIndex, &scheduledDate, &w.Status,
-		&completedActivityID, &assignedBy, &w.IsClubTemplate, &created,
+		&w.DistKm, &w.HR, &w.WeekIndex, &scheduledDate, &w.Status,
+		&completedActivityID, &assignedBy, &w.IsClubTemplate, &announceID, &created,
 	); err != nil {
 		return nil, err
 	}
@@ -282,6 +329,7 @@ func scanWorkout(row scannable) (*model.Workout, error) {
 	w.ScheduledDate = scheduledDate
 	w.CompletedActivityID = completedActivityID
 	w.AssignedBy = assignedBy
+	w.AnnounceID = announceID
 	w.CreatedAt = created
 	return &w, nil
 }

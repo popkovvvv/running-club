@@ -38,6 +38,7 @@ func TestList(t *testing.T) {
 			before: func(m usecaseMocks) {
 				m.clubRepo.EXPECT().GetByCoachID(mock.Anything, coachID).Return(club, nil).Once()
 				m.announceRepo.EXPECT().FindByClub(mock.Anything, clubID).Return([]*model.Announce{announce}, nil).Once()
+				m.announceRepo.EXPECT().FindGoingAthletes(mock.Anything, annID).Return([]*model.User{}, nil).Once()
 			},
 			wantLen: 1,
 		},
@@ -49,6 +50,9 @@ func TestList(t *testing.T) {
 				m.membershipRepo.EXPECT().GetActiveByUser(mock.Anything, athleteID).Return(mem, nil).Once()
 				m.announceRepo.EXPECT().FindByClub(mock.Anything, clubID).Return([]*model.Announce{announce}, nil).Once()
 				m.announceRepo.EXPECT().HasSignup(mock.Anything, annID, athleteID).Return(true, nil).Once()
+				m.announceRepo.EXPECT().FindGoingAthletes(mock.Anything, annID).Return([]*model.User{
+					model.UserFixture(athleteID, "Nikita Popkov", "nikita@pulse.run", "hash", model.RoleAthlete),
+				}, nil).Once()
 			},
 			wantLen:    1,
 			wantSigned: true,
@@ -70,12 +74,16 @@ func TestList(t *testing.T) {
 			if tt.before != nil {
 				tt.before(m)
 			}
-			uc := schedule_usecase.NewUseCase(m.announceRepo, m.clubRepo, m.membershipRepo)
+			uc := schedule_usecase.NewUseCase(m.announceRepo, m.clubRepo, m.membershipRepo, m.workoutRepo)
 			items, err := uc.List(context.Background(), tt.userID, tt.role)
 			require.NoError(t, err)
 			require.Len(t, items, tt.wantLen)
 			if tt.wantLen > 0 {
 				require.Equal(t, tt.wantSigned, items[0].SignedUp)
+				if tt.wantSigned {
+					require.Len(t, items[0].Attendees, 1)
+					require.Equal(t, "NP", items[0].Attendees[0].Init)
+				}
 			}
 		})
 	}

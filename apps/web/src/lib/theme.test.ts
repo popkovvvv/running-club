@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { mapCalendarCells, pulseTheme, scheduleCta, withAccent } from './theme'
+import { mapCalendarCells, pulseTheme, scheduleCta, themeToCssVars, withAccent } from './theme'
 
 describe('scheduleCta', () => {
   it.each([
@@ -17,6 +17,16 @@ describe('withAccent', () => {
   ] as const)('accent %s sets onAccent %s', (hex, onAccent) => {
     expect(withAccent(pulseTheme, hex).onAccent).toBe(onAccent)
     expect(withAccent(pulseTheme, hex).accent).toBe(hex)
+  })
+})
+
+describe('themeToCssVars', () => {
+  it('exposes hero tokens', () => {
+    const vars = themeToCssVars(pulseTheme)
+    expect(vars['--bg']).toBe('#070b12')
+    expect(vars['--hero-glow']).toBe(pulseTheme.heroGlow)
+    expect(vars['--halftone-opacity']).toBe(pulseTheme.halftoneOpacity)
+    expect(vars['--hero-image']).toBe('none')
   })
 })
 

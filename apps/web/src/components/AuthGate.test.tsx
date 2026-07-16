@@ -4,28 +4,28 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthGate } from './AuthGate'
 import { ProfileAthlete, ProfileCoach } from '../screens/ProfileScreen'
 
-const register = vi.fn()
-const login = vi.fn()
-const onBack = vi.fn()
-
-vi.mock('../lib/store', () => ({
-  useApp: () => ({
-    theme: {
-      name: 'PULSE', display: 'Archivo', font: 'Manrope', radius: '20px',
-      bg: '#0c0e10', card: '#16191d', card2: '#1e2228', line: '#2a2f36', text: '#f4f6f7',
-      dim: '#9aa2ab', faint: '#5c636c', accent: '#ff5c22', accent2: '#ff7a45',
-      accentSoft: 'rgba(255,92,34,.15)', good: '#39d98a', onAccent: '#ffffff',
-    },
-    login,
-    register,
-    user: { id: '1', name: 'Никита Попков', email: 'nikita@pulse.run', role: 'athlete', inClub: false },
-    club: { id: 'c', name: 'PULSE', inviteCode: 'PULSE-7K42', accentHex: '#ff5c22', students: 1 },
-    joinClub: vi.fn(),
-    leaveClub: vi.fn(),
-    setPalette: vi.fn(),
-    logout: vi.fn(),
-  }),
+const { register, login, onBack } = vi.hoisted(() => ({
+  register: vi.fn(),
+  login: vi.fn(),
+  onBack: vi.fn(),
 }))
+
+vi.mock('../lib/store', async () => {
+  const { pulseTheme } = await import('../lib/theme')
+  return {
+    useApp: () => ({
+      theme: pulseTheme,
+      login,
+      register,
+      user: { id: '1', name: 'Никита Попков', email: 'nikita@pulse.run', role: 'athlete', inClub: false },
+      club: { id: 'c', name: 'PULSE', inviteCode: 'PULSE-7K42', accentHex: '#ff5c22', students: 1 },
+      joinClub: vi.fn(),
+      leaveClub: vi.fn(),
+      setPalette: vi.fn(),
+      logout: vi.fn(),
+    }),
+  }
+})
 
 describe('AuthGate', () => {
   beforeEach(() => {

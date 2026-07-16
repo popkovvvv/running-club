@@ -4,6 +4,7 @@ package mocks
 
 import (
 	context "context"
+	time "time"
 
 	uuid "github.com/google/uuid"
 	mock "github.com/stretchr/testify/mock"
@@ -75,6 +76,64 @@ func (_c *ActivityRepo_SumDistByUser_Call) Return(_a0 float64, _a1 error) *Activ
 }
 
 func (_c *ActivityRepo_SumDistByUser_Call) RunAndReturn(run func(context.Context, uuid.UUID) (float64, error)) *ActivityRepo_SumDistByUser_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// SumDistByUserSince provides a mock function with given fields: ctx, userID, since
+func (_m *ActivityRepo) SumDistByUserSince(ctx context.Context, userID uuid.UUID, since time.Time) (float64, error) {
+	ret := _m.Called(ctx, userID, since)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SumDistByUserSince")
+	}
+
+	var r0 float64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, time.Time) (float64, error)); ok {
+		return rf(ctx, userID, since)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uuid.UUID, time.Time) float64); ok {
+		r0 = rf(ctx, userID, since)
+	} else {
+		r0 = ret.Get(0).(float64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uuid.UUID, time.Time) error); ok {
+		r1 = rf(ctx, userID, since)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ActivityRepo_SumDistByUserSince_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'SumDistByUserSince'
+type ActivityRepo_SumDistByUserSince_Call struct {
+	*mock.Call
+}
+
+// SumDistByUserSince is a helper method to define mock.On call
+//   - ctx context.Context
+//   - userID uuid.UUID
+//   - since time.Time
+func (_e *ActivityRepo_Expecter) SumDistByUserSince(ctx interface{}, userID interface{}, since interface{}) *ActivityRepo_SumDistByUserSince_Call {
+	return &ActivityRepo_SumDistByUserSince_Call{Call: _e.mock.On("SumDistByUserSince", ctx, userID, since)}
+}
+
+func (_c *ActivityRepo_SumDistByUserSince_Call) Run(run func(ctx context.Context, userID uuid.UUID, since time.Time)) *ActivityRepo_SumDistByUserSince_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uuid.UUID), args[2].(time.Time))
+	})
+	return _c
+}
+
+func (_c *ActivityRepo_SumDistByUserSince_Call) Return(_a0 float64, _a1 error) *ActivityRepo_SumDistByUserSince_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ActivityRepo_SumDistByUserSince_Call) RunAndReturn(run func(context.Context, uuid.UUID, time.Time) (float64, error)) *ActivityRepo_SumDistByUserSince_Call {
 	_c.Call.Return(run)
 	return _c
 }

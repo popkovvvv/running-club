@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/nikpopkov/running-club/api/internal/domain/dto"
 	"github.com/nikpopkov/running-club/api/internal/domain/model"
+	"github.com/nikpopkov/running-club/api/internal/pkg/periodstats"
 )
 
 type (
@@ -40,11 +41,13 @@ type (
 
 	activityRepo interface {
 		FindByUser(ctx context.Context, userID uuid.UUID) ([]*model.Activity, error)
+		GetByID(ctx context.Context, id uuid.UUID) (*model.Activity, error)
 		SumDistByUserSince(ctx context.Context, userID uuid.UUID, since time.Time) (float64, error)
 	}
 
 	workoutRepo interface {
 		FindByUserWeek(ctx context.Context, userID uuid.UUID, week int, kind model.WorkoutKind) ([]*model.Workout, error)
+		FindByUser(ctx context.Context, userID uuid.UUID) ([]*model.Workout, error)
 		SumPlanDistByUserWeek(ctx context.Context, userID uuid.UUID, weekIndex int) (float64, error)
 	}
 
@@ -77,7 +80,7 @@ func NewUseCase(
 	}
 }
 
-func (u *UseCase) Get(ctx context.Context, coachID, studentID uuid.UUID, weekIndex int) (*dto.StudentDetailView, error) {
+func (u *UseCase) Get(ctx context.Context, coachID, studentID uuid.UUID, year, month int) (*dto.StudentDetailView, error) {
 	club, err := u.clubRepo.GetByCoachID(ctx, coachID)
 	if err != nil {
 		return nil, fmt.Errorf("clubRepo.GetByCoachID: %w", err)
@@ -94,17 +97,23 @@ func (u *UseCase) Get(ctx context.Context, coachID, studentID uuid.UUID, weekInd
 		return nil, fmt.Errorf("userRepo.GetByID: %w", err)
 	}
 
-	weekStart := startOfWeek(time.Now().UTC())
+	now := time.Now().UTC()
+	if year == 0 || month < 1 || month > 12 {
+		year = now.Year()
+		month = int(now.Month())
+	}
+
+	weekStart := startOfWeek(now)
 	weekKm, err := u.activityRepo.SumDistByUserSince(ctx, studentID, weekStart)
 	if err != nil {
 		return nil, fmt.Errorf("activityRepo.SumDistByUserSince: %w", err)
 	}
-	planKm, err := u.workoutRepo.SumPlanDistByUserWeek(ctx, studentID, weekIndex)
+	planKm, err := u.workoutRepo.SumPlanDistByUserWeek(ctx, studentID, 0)
 	if err != nil {
 		return nil, fmt.Errorf("workoutRepo.SumPlanDistByUserWeek: %w", err)
 	}
 	if planKm == 0 {
-		if pw, err := u.planWeekRepo.GetByClubAndIndex(ctx, club.ID, weekIndex); err == nil {
+		if pw, err := u.planWeekRepo.GetByClubAndIndex(ctx, club.ID, 0); err == nil {
 			planKm, _ = pw.TargetKm()
 		}
 	}
@@ -121,30 +130,48 @@ func (u *UseCase) Get(ctx context.Context, coachID, studentID uuid.UUID, weekInd
 		sub = "Нет записи"
 	}
 
-	planWorkouts, err := u.workoutRepo.FindByUserWeek(ctx, studentID, weekIndex, model.WorkoutPlan)
-	if err != nil {
-		return nil, fmt.Errorf("workoutRepo.FindByUserWeek: %w", err)
-	}
 	activities, err := u.activityRepo.FindByUser(ctx, studentID)
 	if err != nil {
 		return nil, fmt.Errorf("activityRepo.FindByUser: %w", err)
 	}
+	allWorkouts, err := u.workoutRepo.FindByUser(ctx, studentID)
+	if err != nil {
+		return nil, fmt.Errorf("workoutRepo.FindByUser: %w", err)
+	}
 
-	planDays := make([]dto.PlanDayView, 0, len(planWorkouts))
-	for _, w := range planWorkouts {
-		actualKm := 0.0
-		if w.Status == model.WorkoutStatusCompleted {
-			actualKm = w.DistKm
+	planForSummary := make([]*model.Workout, 0, len(allWorkouts))
+	planDays := make([]dto.PlanDayView, 0)
+	linked := make(map[string]struct{})
+
+	for _, w := range allWorkouts {
+		if w.Kind == model.WorkoutPlan {
+			planForSummary = append(planForSummary, w)
 		}
-		planDays = append(planDays, dto.NewPlanDayView(
-			w.DayLabel, w.Title, string(w.WorkoutType), w.DistKm, actualKm, string(w.Status),
-		))
+		at := workoutDate(w)
+		if at.Year() != year || int(at.Month()) != month {
+			continue
+		}
+		day := mapPlanDay(ctx, u.activityRepo, w)
+		if day.ActivityID != "" {
+			linked[day.ActivityID] = struct{}{}
+		}
+		planDays = append(planDays, day)
 	}
 
 	recent := make([]dto.ActivityView, 0)
 	limit := 10
-	for i, a := range activities {
-		if i >= limit {
+	for _, a := range activities {
+		if _, ok := linked[a.ID.String()]; ok {
+			continue
+		}
+		at := a.CreatedAt
+		if a.StartedAt != nil {
+			at = *a.StartedAt
+		}
+		if at.Year() != year || int(at.Month()) != month {
+			continue
+		}
+		if len(recent) >= limit {
 			break
 		}
 		recent = append(recent, dto.NewActivityView(
@@ -154,18 +181,58 @@ func (u *UseCase) Get(ctx context.Context, coachID, studentID uuid.UUID, weekInd
 		))
 	}
 
+	summary := periodstats.Build(now, activities, planForSummary)
+
 	student := dto.NewStudentView(
 		usr.ID, initials(usr.Name), usr.Name, sub,
 		strconv.FormatFloat(weekKm, 'f', 1, 64), comp,
 	)
-	return &dto.StudentDetailView{
-		Student:          student,
-		WeekKm:           strconv.FormatFloat(weekKm, 'f', 1, 64),
-		WeekPlanKm:       strconv.FormatFloat(planKm, 'f', 1, 64),
-		Comp:             comp,
-		PlanDays:         planDays,
-		RecentActivities: recent,
-	}, nil
+	view := dto.NewStudentDetailView(
+		student,
+		strconv.FormatFloat(weekKm, 'f', 1, 64),
+		strconv.FormatFloat(planKm, 'f', 1, 64),
+		comp,
+		planDays,
+		recent,
+		summary,
+		year,
+		month,
+	)
+	return &view, nil
+}
+
+func mapPlanDay(ctx context.Context, activityRepo activityRepo, w *model.Workout) dto.PlanDayView {
+	actualKm := 0.0
+	activityID, activityWhen, activityPace := "", "", ""
+	if w.Status == model.WorkoutStatusCompleted && w.CompletedActivityID != nil {
+		if a, err := activityRepo.GetByID(ctx, *w.CompletedActivityID); err == nil {
+			actualKm = a.DistKm
+			activityID = a.ID.String()
+			activityWhen = a.WhenLabel
+			activityPace = a.Pace
+		} else {
+			actualKm = w.DistKm
+		}
+	} else if w.Status == model.WorkoutStatusCompleted {
+		actualKm = w.DistKm
+	}
+	scheduled := ""
+	if w.ScheduledDate != nil {
+		scheduled = w.ScheduledDate.Format("2006-01-02")
+	} else {
+		scheduled = workoutDate(w).Format("2006-01-02")
+	}
+	return dto.NewPlanDayView(
+		w.ID.String(), w.DayLabel, w.Title, string(w.WorkoutType), w.DistKm, actualKm, string(w.Status),
+		scheduled, activityID, activityWhen, activityPace,
+	)
+}
+
+func workoutDate(w *model.Workout) time.Time {
+	if w.ScheduledDate != nil {
+		return w.ScheduledDate.UTC()
+	}
+	return w.CreatedAt.UTC()
 }
 
 func startOfWeek(t time.Time) time.Time {

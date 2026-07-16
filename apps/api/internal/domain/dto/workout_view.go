@@ -15,8 +15,6 @@ type CreateWorkoutRequest struct {
 	Title         string         `json:"title"`
 	Description   string         `json:"description"`
 	DistKm        float64        `json:"distKm"`
-	Duration      string         `json:"duration"`
-	Pace          string         `json:"pace"`
 	HR            string         `json:"hr"`
 	WeekIndex     int            `json:"weekIndex"`
 	ScheduledDate *string        `json:"scheduledDate"`
@@ -36,31 +34,33 @@ type SegmentInput struct {
 }
 
 type WorkoutView struct {
-	ID                  uuid.UUID     `json:"id"`
-	Kind                string        `json:"kind"`
-	WorkoutType         string        `json:"workoutType"`
-	DayLabel            string        `json:"dayLabel"`
-	Tag                 string        `json:"tag"`
-	Title               string        `json:"title"`
-	Description         string        `json:"description,omitempty"`
-	DistKm              float64       `json:"distKm"`
-	Duration            string        `json:"duration"`
-	Pace                string        `json:"pace"`
-	HR                  string        `json:"hr"`
-	WeekIndex           int           `json:"weekIndex"`
-	ScheduledDate       *string       `json:"scheduledDate,omitempty"`
-	Status              string        `json:"status"`
-	CompletedActivityID *uuid.UUID    `json:"completedActivityId,omitempty"`
-	AssignedBy          *uuid.UUID    `json:"assignedBy,omitempty"`
-	IsClubTemplate      bool          `json:"isClubTemplate"`
-	Segments            []SegmentView `json:"segments,omitempty"`
+	ID                  uuid.UUID            `json:"id"`
+	Kind                string               `json:"kind"`
+	WorkoutType         string               `json:"workoutType"`
+	DayLabel            string               `json:"dayLabel"`
+	Tag                 string               `json:"tag"`
+	Title               string               `json:"title"`
+	Description         string               `json:"description,omitempty"`
+	DistKm              float64              `json:"distKm"`
+	HR                  string               `json:"hr"`
+	WeekIndex           int                  `json:"weekIndex"`
+	ScheduledDate       *string              `json:"scheduledDate,omitempty"`
+	Status              string               `json:"status"`
+	CompletedActivityID *uuid.UUID           `json:"completedActivityId,omitempty"`
+	AssignedBy          *uuid.UUID           `json:"assignedBy,omitempty"`
+	IsClubTemplate      bool                 `json:"isClubTemplate"`
+	Segments            []SegmentView        `json:"segments,omitempty"`
+	PlannedKm           float64              `json:"plannedKm"`
+	ActualKm            *float64             `json:"actualKm,omitempty"`
+	ActualPace          string               `json:"actualPace,omitempty"`
+	Fact                *ActivityDetailView  `json:"fact,omitempty"`
 }
 
 func NewWorkoutView(
 	id uuid.UUID,
 	kind, workoutType, dayLabel, tag, title, description string,
 	distKm float64,
-	duration, pace, hr string,
+	hr string,
 	weekIndex int,
 	scheduledDate *string,
 	status string,
@@ -77,8 +77,6 @@ func NewWorkoutView(
 		Title:               title,
 		Description:         description,
 		DistKm:              distKm,
-		Duration:            duration,
-		Pace:                pace,
 		HR:                  hr,
 		WeekIndex:           weekIndex,
 		ScheduledDate:       scheduledDate,
@@ -87,6 +85,7 @@ func NewWorkoutView(
 		AssignedBy:          assignedBy,
 		IsClubTemplate:      isClubTemplate,
 		Segments:            segments,
+		PlannedKm:           distKm,
 	}
 }
 
@@ -112,15 +111,17 @@ type PlanResponse struct {
 	WeekIndex int           `json:"weekIndex"`
 	WeekRange string        `json:"weekRange"`
 	WeekPlan  string        `json:"weekPlan"`
+	WeekKm    string        `json:"weekKm"`
 	Days      []WorkoutView `json:"days"`
 	Mine      []WorkoutView `json:"mine"`
 }
 
-func NewPlanResponse(weekIndex int, weekRange, weekPlan string, days, mine []WorkoutView) *PlanResponse {
+func NewPlanResponse(weekIndex int, weekRange, weekPlan, weekKm string, days, mine []WorkoutView) *PlanResponse {
 	return &PlanResponse{
 		WeekIndex: weekIndex,
 		WeekRange: weekRange,
 		WeekPlan:  weekPlan,
+		WeekKm:    weekKm,
 		Days:      days,
 		Mine:      mine,
 	}

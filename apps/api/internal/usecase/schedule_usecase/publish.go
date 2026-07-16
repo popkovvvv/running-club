@@ -27,6 +27,9 @@ func (u *UseCase) Publish(ctx context.Context, coachID uuid.UUID, req dto.Create
 	if err := u.announceRepo.Create(ctx, a); err != nil {
 		return nil, fmt.Errorf("announceRepo.Create: %w", err)
 	}
-	v := toAnnounceView(a, false)
+	v, err := u.toAnnounceView(ctx, a, false)
+	if err != nil {
+		return nil, fmt.Errorf("toAnnounceView: %w", err)
+	}
 	return &v, nil
 }
